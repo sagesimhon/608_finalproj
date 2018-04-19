@@ -1,8 +1,6 @@
 #include "Arduino.h"
 #include "Button.h"
 
-
-  
 Button::Button(int pin = 15, int numstates = 0) {
   // Set the pin and total number of states of the button
   _pin = pin;
@@ -26,6 +24,7 @@ Button::Button(int pin = 15, int numstates = 0) {
 
 
 int Button::getState() {
+  update();
   return _buttonState;
 }
 

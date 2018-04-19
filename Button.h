@@ -30,6 +30,7 @@ class Button{
   Button(int pin, int numstates);
   
   /**
+   * Updates the button and
    * Returns the current state of the button from [0, user specified numOptions)
    */
   int getState();
