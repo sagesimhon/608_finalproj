@@ -1,9 +1,21 @@
 # 608_finalproj
 
-### USEFUL LINKS:
+### USEFUL STUFF:
 
 project proposal: https://docs.google.com/document/d/1MmS5aJmTf7h9zif0waNb0SbHrCHV8-rOJm8-NlFZWDQ/edit
 milestones: https://docs.google.com/spreadsheets/d/1dAaHvU9l2HsWnL9xeRB0oCax8zR0Zb-WK1GE9FGS7pE/edit#gid=0
+
+#### General Workflow:
+1. PULL BEFORE YOU START WORKING!!
+2. Message out the files you'll be working on and the changes you'll make.
+   This way, others know not to work on the same file / section and we'll minimize merge conflicts
+3. COMMIT OFTEN!!! and please write descriptive commit statements in case someone has to pick up where you left off.
+   Good commit statements means its easier to follow your train of thought.
+4. PUSH WHEN YOU'RE DONE. 
+   Push when you've completed something. ie try not to push half-finished broken code.
+   But don't hoard the code you've completed either. 
+5. COMMUNICATE OFTEN. Message out when you've pushed especially if it's a big / relevant change
+   so that everyone else knows to pull.
 
 ### UPDATES
 4/20/18:
