@@ -13,3 +13,7 @@ milestones: https://docs.google.com/spreadsheets/d/1dAaHvU9l2HsWnL9xeRB0oCax8zR0
    ImageCoords also conveniently returns its stored values as a comma separated string.
 3. Rough ESP32 loop is completed. 
    Currently data is being added to our ImageCoords object. TODO format the data into a post request instead of just serial printing it
+4. Rough server is done. It currently returns the html and js that displays an image
+   based on variable lists of x and y coordinates.
+   TODO create the db to store x and y coordinates. They can be stored as a string since that's what the
+   coordinate lists are returned as in the html anyways. No need to pre-process any data
