@@ -8,66 +8,85 @@
 
 const int response_timeout = 6000; //ms to wait for response from host
 U8G2_SH1106_128X64_NONAME_F_4W_HW_SPI oled(U8G2_R0, 5, 17,16);
-HardwareSerial gps(2);
 MPU9255 imu;
 
-/////////////// STATES //////////////////
+////////////////////////// STATES ////////////////////////////////////
+
+// Currently our states cycle from INSTRUCTIONS --> DRAW --> INSTRUCTIONS
 #define INSTRUCTIONS -1
 #define DRAW 0
 #define POST_DRAW_INSTRUCTIONS 3
 #define UPLOAD 1
 #define DOWNLOAD 2
 
+/////////////////// SAMPLING AND SAVING INFORMATION ////////////////
 int state = INSTRUCTIONS;
-unsigned long lastSampleTime = millis();
-int sampleFrequency = 100; // 100 ms
-int globalCounter = 0;
+unsigned long lastSampleTime = millis();    // Used to determine whether its time to sample again
+int sampleFrequency = 100;                  // Take a position sample every 100 ms
+int globalCounter = 0;                      // This is used for testing purposes
 
+int pointsToSave = 50;                      // size of our ImageCoords
+ImageCoords img(pointsToSave);                
+int numSavedPoints = 0;                     // number of points that haven't been posted
+
+//////////////////////// BUTTONS //////////////////////////////////
 Button b1(15, 2);
 Button b2(2, 2);
-int b1State = b1.getState();
-int b2State = b2.getState();
+int lastB1 = b1.getState();                 // Last seen states of button1 and button2
+int lastB2 = b2.getState();
 
-ImageCoords img(50);
-int numSavedPoints = 0;
 
 void loop(){
   switch(state){
-    
+      // PRINT INSTRUCTIONS AND BE READY TO START DRAWING
       case INSTRUCTIONS:
         print_instructions("press b1 to draw then b1 again to stop");
-        if (b1State != b1.getState()){
-          b1State = b1.getState();
+
+        // Button was pressed. Change states
+        if (lastB1 != b1.getState()){
+          lastB1 = b1.getState();
           state = DRAW;
         }
         break;
-        
-      case DRAW:      // sampling
+      
+      // CONTINUOUSLY SAMPLE INPUTS FROM SENSOR AND POST TO SERVER 
+      case DRAW:    
         print_instructions("I'm drawing. press b again to stop");
         if (millis() - lastSampleTime >= sampleFrequency){
           lastSampleTime = millis();
           numSavedPoints += 1;
-          imu.readAccelData(imu.accelCount);
-          //img.addToImage(imu.accelCount[0] * imu.aRes, imu.accelCount[1] * imu.aRes);
-          img.addToImage(globalCounter, globalCounter);
+
+          // sample from sensor
+          // imu.readAccelData(imu.accelCount);
+          // img.addToImage(imu.accelCount[0] * imu.aRes, imu.accelCount[1] * imu.aRes);
+
+          img.addToImage(globalCounter, globalCounter); // Use global counter for testing purposes
           globalCounter++;
         }
-        if(numSavedPoints == 50){
+
+        // ImageCoords is full, time to post.
+        if(numSavedPoints == pointsToSave){
+          // TODO POST HERE
           Serial.println("---------I would upload now");
           Serial.println("--- X Coords" + img.get1DCoords(50, true));
           Serial.println("--- Y Coords" + img.get1DCoords(50, false));
           numSavedPoints = 0;
         }
-        if(b1State != b1.getState()){
-          b1State = b1.getState();
+
+        // Button was pressed. Change states
+        if(lastB1 != b1.getState()){
+          lastB1 = b1.getState();
           state = POST_DRAW_INSTRUCTIONS;
         }
         break;
-        
+
+      // TODO extend this into more states
       case POST_DRAW_INSTRUCTIONS:
+      // TODO DO A FINAL POST
+      // TODO DISPLAY A MENU FOR MORE OPTIONS OR SOMETHING
         print_instructions("press b1 to finish");
-        if (b1State != b1.getState()){
-          b1State = b1.getState();
+        if (lastB1 != b1.getState()){
+          lastB1 = b1.getState();
           state = INSTRUCTIONS;
         }
         break;
@@ -85,7 +104,7 @@ void setup() {
   setup_imu();                           //imu
 
                                         // Setup wifi
-  WiFi.begin("MIT",""); //attempt to connect to wifi 
+  WiFi.begin("6s08","iesc6s08"); //attempt to connect to wifi 
   int count = 0; //count used for Wifi check times
     while (WiFi.status() != WL_CONNECTED && count<6) {
       delay(500);
