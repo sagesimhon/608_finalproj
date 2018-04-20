@@ -9,8 +9,8 @@ def get_html():
     """
     returns html that displays the image
     """
-    xCoords = '[0,1,2,3,4,100,105]'
-    yCoords = '[0,1,2,3,4,100,0]'
+    xCoords = "\'[0,1,2,3,4,100,105, 110]\'"
+    yCoords = "\'[0,1,2,3,4,100,0, 100]\'"
 
     return '''
             <!doctype html>
