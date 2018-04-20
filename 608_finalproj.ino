@@ -69,8 +69,8 @@ void loop(){
         if(numSavedPoints == pointsToSave){
           // TODO POST HERE
           Serial.println("---------I would upload now");
-          Serial.println("--- X Coords" + img.get1DCoords(50, true));
-          Serial.println("--- Y Coords" + img.get1DCoords(50, false));
+          Serial.println("--- X Coords :" + img.get1DCoords(numSavedPoints, true, false));
+          Serial.println("--- Y Coords :" + img.get1DCoords(numSavedPoints, false, false));
           numSavedPoints = 0;
         }
 
@@ -105,7 +105,7 @@ void setup() {
   setup_imu();                           //imu
 
                                         // Setup wifi
-  WiFi.begin("6s08","iesc6s08"); //attempt to connect to wifi 
+  WiFi.begin("MIT",""); //attempt to connect to wifi 
   int count = 0; //count used for Wifi check times
     while (WiFi.status() != WL_CONNECTED && count<6) {
       delay(500);

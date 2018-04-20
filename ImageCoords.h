@@ -24,14 +24,19 @@ class ImageCoords{
   ImageCoords(int capacity);
 
   /**
-   * int numMostRecent: the number of most recent data points. 
-   *                    0 <= numMostRecent <= capacity
-   * bool isX .       : true to receive only X coords, false to receive only Y coords                         
-   * return           : a String of the `numMostRecent` most recent x or y coordinates
-   *                    separated by commas, WITH a trailing comma.
-   *                    most recent values appear first, oldest values appear last
+   * Returns the `numCoords` most recent data points for one dimension.
+   * 
+   * int numCoords      : the number of most recent data points to return. 
+   *                      0 <= numCoords <= capacity
+   * bool isX .         : true to receive only X coords, false to receive only Y coords                         
+   * bool isNewestFirst : true for newest data points to come first, oldest to come last
+   *                      false for oldest data first, newest last
+   * return             : a String of `numCoords` most recent x or y coordinates
+   *                      separated by commas, WITH a trailing comma.
+   *                      most recent values appear first, oldest values appear last iff `isNewestFirst == true`
+   *                      otherwise oldest data appears first, newest last
    */
-  String get1DCoords(int numMostRecent, bool isX);
+  String get1DCoords(int numCoords, bool isX, bool isNewestFirst);
 
   /**
    * Clears all current datapoints

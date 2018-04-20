@@ -9,13 +9,19 @@ ImageCoords::ImageCoords(int capacity){
   _oldestIndex = 0; 
 }
 
-String ImageCoords::get1DCoords(int numMostRecent, bool isX){
+String ImageCoords::get1DCoords(int numCoords, bool isX, bool isNewestFirst){
   float* arr = (isX) ? _xCoords : _yCoords;
 
   String vals = "";
-  // i is the displacement from the NEWEST value. as i increases, our values get older
-  for(int i = 0; i < numMostRecent; i++){
-    int index = mod(_oldestIndex - 1 - i, _capacity);
+
+  // start either at the newest value, or the numCoordsth oldest value
+  int startIndex = (isNewestFirst) ? _oldestIndex - 1 : mod( _oldestIndex - numCoords, _capacity); 
+  
+  // disp_sign determines whether we go forward in the list or backwards
+  int disp_sign = (isNewestFirst) ? -1 : 1;  
+  for(int i = 0; i < numCoords; i++){
+    // i is the displacement from the START index.
+    int index = mod(startIndex + (disp_sign * i), _capacity);
     vals += arr[index];
     vals += ",";
   }
