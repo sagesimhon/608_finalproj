@@ -20,7 +20,7 @@ String ImageCoords::get1DCoords(int numMostRecent, bool isX){
     vals += ",";
   }
 
-  return vals;
+  return vals.substring(0, vals.length() - 1);
 }
 
 int ImageCoords::mod(int a, int b){

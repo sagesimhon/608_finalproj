@@ -28,7 +28,7 @@ class ImageCoords{
    *                    0 <= numMostRecent <= capacity
    * bool isX .       : true to receive only X coords, false to receive only Y coords                         
    * return           : a String of the `numMostRecent` most recent x or y coordinates
-   *                    separated by commas, with a trailing comma.
+   *                    separated by commas, WITH NO trailing comma.
    *                    most recent values appear first, oldest values appear last
    */
   String get1DCoords(int numMostRecent, bool isX);
