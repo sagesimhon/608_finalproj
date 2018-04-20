@@ -6,6 +6,7 @@
 #include "Button.h"
 #include "ImageCoords.h";
 
+//change 
 const int response_timeout = 6000; //ms to wait for response from host
 U8G2_SH1106_128X64_NONAME_F_4W_HW_SPI oled(U8G2_R0, 5, 17,16);
 HardwareSerial gps(2);
