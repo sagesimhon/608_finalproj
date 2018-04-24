@@ -8,7 +8,9 @@ images_db = '__HOME__/images.db'
 
 def request_handler(request):
     """
-    TODO pull values from request and please fill in this docstring w what request looks like
+    {'method': 'POST', 'args': ['x_coords', 'y_coords', 'kerberos'], 'form': {'x_coords': '50 coordinates', 'y_coords': '50 coordinates'}, 'is_json': True,})
+
+
     """
 
     # Hard coded coordinates to draw a star
