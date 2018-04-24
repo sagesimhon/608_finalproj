@@ -12,11 +12,15 @@ def request_handler(request):
     """
 
     # Hard coded coordinates to draw a star
-    entry_id = "star"
-    x_coords = "60,20,110,10,100,60,"
-    y_coords = "20,110,50,50,110,20,"
-
-    post(entry_id, x_coords, y_coords);
+    #entry_id = "star"
+    #x_coords = "60,20,110,10,100,60,"
+    #y_coords = "20,110,50,50,110,20,"
+    if request['method'] == 'POST':
+        x_coords = request['form']['x_coords']
+        y_coords = request['form']['y_coords']
+        entry_id = request['form']['kerberos']
+        post(entry_id, x_coords, y_coords);
+    
     return get_html(entry_id);
 
 def post(entry_id, x_coords, y_coords):
@@ -45,7 +49,7 @@ def post(entry_id, x_coords, y_coords):
 def get_html(entry_id):
     """
     returns html that displays the image specified by `entry_id`
-    entry_id    :    a string that represents the ID of the image. 
+    entry_id    :    a string that represents the ID of the image.
     """
 
     conn = sqlite3.connect(images_db)
@@ -78,14 +82,14 @@ def get_html(entry_id):
                   <meta charset="utf-8">
                   <title>data demo</title>
                 </head>
-                
+
                 <body>
 
                     <canvas id="myCanvas" width="200" height="200"
                                             style="border:1px solid #d3d3d3;">
                                             Your browser does not support the HTML5 canvas tag.
                     </canvas>
-                     
+
                     <script>
 
                         var c = document.getElementById("myCanvas");
@@ -105,7 +109,7 @@ def get_html(entry_id):
                         ctx.stroke();
 
                     </script>
-                 
+
                 </body>
                 </html>
             '''
