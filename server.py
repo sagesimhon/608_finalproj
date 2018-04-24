@@ -56,9 +56,9 @@ def get_html(entry_id):
     all_xs = c.execute('''SELECT x_coords from image WHERE id == ? ORDER BY t ASC''', (entry_id,)).fetchall();
     all_ys = c.execute('''SELECT y_coords from image where id == ? ORDER BY t ASC''',(entry_id,)).fetchall();
 
-    # '[x1,x2,x3,x4...xn]' NOTE THAT THERE IS NO TRAILING COMMA a trailing comma will fuck up the javascript
-    xCoords = ("'[" + "".join(all_xs))[:-1] + "]'"
-    yCoords = ("'[" + "".join(all_ys))[:-1] + "]'"
+    # [x1,x2,x3,x4...xn] as a string NOTE THAT THERE IS NO TRAILING COMMA a trailing comma will fuck up the javascript
+    xCoords = ("[" + "".join(all_xs))[:-1] + "]"
+    yCoords = ("[" + "".join(all_ys))[:-1] + "]"
     conn.close()
 
     '''
@@ -77,7 +77,6 @@ def get_html(entry_id):
                 <head>
                   <meta charset="utf-8">
                   <title>data demo</title>
-                  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
                 </head>
                 
                 <body>
@@ -86,9 +85,6 @@ def get_html(entry_id):
                                             style="border:1px solid #d3d3d3;">
                                             Your browser does not support the HTML5 canvas tag.
                     </canvas>
-
-                    <span id="xCoords" data-attr= ''' + xCoords + '''></span>''' + '''
-                    <span id="yCoords" data-attr= ''' + yCoords + '''></span>''' + '''
                      
                     <script>
 
@@ -96,8 +92,8 @@ def get_html(entry_id):
                         var ctx = c.getContext("2d");
 
 
-                        var xCoords = $('#xCoords').data('attr');
-                        var yCoords = $('#yCoords').data('attr');
+                        var xCoords = ''' + xCoords + ';''' + '''
+                        var yCoords = ''' + yCoords + ';''' + '''
 
                         ctx.beginPath();
                         ctx.moveTo(xCoords[0], yCoords[0]);
