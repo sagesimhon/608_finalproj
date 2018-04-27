@@ -18,6 +18,24 @@ milestones: https://docs.google.com/spreadsheets/d/1dAaHvU9l2HsWnL9xeRB0oCax8zR0
    so that everyone else knows to pull.
 
 ### UPDATES
+4/27/18:
+1. ESP `POST_request` function is defined
+	- two new relevant global variables are defined at the top, under label /// POST REQUESTS ///
+	- IMPORTANT: you need to change these variables for your local code
+2. Major adjustments are made to the `modifyReading` function
+	- now has only one input, `reading`: float value to be scaled
+	- all other inputs are hardcoded at the top, under label /// CANVAS DIMENSIONS ///
+	- the function now returns an int (instead of void) because the float pointer is not happy about changing float to int
+	- simplified some math based on the assumption that variable lowerbound (left/bottom bound of canvas) is always 0
+	- (old function is commented out at the bottom; will delete later)
+3. uses of `modifyReading` and `POST_request` are included inside loop under case DRAW
+4. TODOs:
+	- clean up docstring on `modifyReading` after confirming new fxn with team
+	- server needs GET request implemented so the drawing shows up
+	- (optional) update `modifyReading` to enable separate scaling for x and y coords, in case canvas is not square
+	- (optional) currently, arrays _xCoords and _yCoords used by ImageCoords is float-based; change to int if necessary
+	- package pretty print, mod, and `modifyReading` into a c++ class
+
 4/20/18:
 
 1. ESP TODOs:
