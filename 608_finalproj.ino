@@ -10,6 +10,7 @@
 const int response_timeout = 6000; //ms to wait for response from host
 U8G2_SH1106_128X64_NONAME_F_4W_HW_SPI oled(U8G2_R0, 5, 17,16);
 MPU9255 imu;
+WiFiClient client;
 
 ////////////////////////// STATES ////////////////////////////////////
 
@@ -27,7 +28,7 @@ int sampleFrequency = 100;                  // Take a position sample every 100 
 int globalCounter = 0;                      // This is used for testing purposes
 
 int pointsToSave = 50;                      // size of our ImageCoords
-ImageCoords img(pointsToSave);                
+ImageCoords img(pointsToSave);
 int numSavedPoints = 0;                     // number of points that haven't been posted
 
 //////////////////////// BUTTONS //////////////////////////////////
@@ -35,6 +36,14 @@ Button b1(15, 2);
 Button b2(2, 2);
 int lastB1 = b1.getState();                 // Last seen states of button1 and button2
 int lastB2 = b2.getState();
+
+//////////////////////// POST REQUESTS ////////////////////////////
+String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
+String KERBEROS = "dainkim"; // CHANGE FOR YOUR OWN KERBEROS
+
+//////////////////////// CANVAS DIMENSIONS ////////////////////////
+const int upperbound = 200; // currently, this indicates both width and height of canvas
+const int lowerbound = 0;
 
 
 void loop(){
@@ -51,31 +60,38 @@ void loop(){
         break;
       
       // CONTINUOUSLY SAMPLE INPUTS FROM SENSOR AND POST TO SERVER 
-      case DRAW:    
+      case DRAW:
         print_instructions("I'm drawing. press b again to stop");
         if (millis() - lastSampleTime >= sampleFrequency){
           lastSampleTime = millis();
           numSavedPoints += 1;
 
           // sample from sensor
-          // imu.readAccelData(imu.accelCount);
-          // img.addToImage(imu.accelCount[0] * imu.aRes, imu.accelCount[1] * imu.aRes);
-
-          img.addToImage(globalCounter, globalCounter); // Use global counter for testing purposes
+          imu.readAccelData(imu.accelCount);
+          // scale points before adding to image
+          float x = imu.accelCount[0]*imu.aRes;
+          float y = imu.accelCount[1]*imu.aRes;
+          img.addToImage(modifyReading(x), modifyReading(y));
           globalCounter++;
         }
 
         // ImageCoords is full, time to post.
         if(numSavedPoints == pointsToSave){
-          // TODO POST HERE
           Serial.println("---------I would upload now");
           Serial.println("--- X Coords :" + img.get1DCoords(numSavedPoints, true, false));
           Serial.println("--- Y Coords :" + img.get1DCoords(numSavedPoints, false, false));
+          POST_request(KERBEROS, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false));
           numSavedPoints = 0;
-        }
+          }
 
         // Button was pressed. Change states
         if(lastB1 != b1.getState()){
+          // DO A FINAL POST
+          Serial.println("-------Uploading remaining values..");
+          Serial.println("--- X Coords :" + img.get1DCoords(numSavedPoints, true, false));
+          Serial.println("--- Y Coords :" + img.get1DCoords(numSavedPoints, false, false));
+          POST_request(KERBEROS, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false));
+          numSavedPoints = 0;
           lastB1 = b1.getState();
           state = POST_DRAW_INSTRUCTIONS;
         }
@@ -83,7 +99,6 @@ void loop(){
 
       // TODO extend this into more states
       case POST_DRAW_INSTRUCTIONS:
-      // TODO DO A FINAL POST
       // TODO DISPLAY A MENU FOR MORE OPTIONS OR SOMETHING
         print_instructions("press b1 to finish");
         if (lastB1 != b1.getState()){
@@ -181,16 +196,47 @@ void setup_imu(){
   imu.getGres(); 
 }
 
-void modifyReading(float &reading, float upperbound, float maxpossible, float lowercap) {
-  // &reading      : address of imu or sensor reading to be scaled and modified
-  // upperbound    : upper bound that the modified reading will be scaled according to (canvas size)
-  // maxpossible   : highest possible value of reading to be mapped to upperbound 
-  // lowercap      : lower bound; any values lower than lowercap will be taken as the same value as lowercap and mapped to 0
-  if (reading < lowercap) {
-    reading = 0;
+// NEW FUNCTION
+int modifyReading(float reading) {
+  // reading: float value of imu or sensor reading to be scaled and modified
+  float maxpossible = 0.5;//for now
+  if (reading < lowerbound) {
+    return lowerbound;
+  } else if (reading > maxpossible) {
+    return upperbound;
   } else {
-    float m = upperbound/(maxpossible - lowercap);
-    reading = m*reading - m*lowercap;
+    float scaled_reading = reading*upperbound/maxpossible;
+    return (int)scaled_reading;
   }
 }
+//// BELOW IS THE OLD FUNCTION
+//void modifyReading(float &reading, float upperbound, float maxpossible, float lowercap) {
+//  // &reading      : address of imu or sensor reading to be scaled and modified
+//  // upperbound    : upper bound that the modified reading will be scaled according to (canvas size)
+//  // maxpossible   : highest possible value of reading to be mapped to upperbound 
+//  // lowercap      : lower bound; any values lower than lowercap will be taken as the same value as lowercap and mapped to 0
+//  if (reading < lowercap) {
+//    reading = 0;
+//  } else {
+//    float m = upperbound/(maxpossible - lowercap);
+//    reading = m*reading - m*lowercap;
+//  }
+//}
+
+void POST_request(String kerberos, String x_coords, String y_coords) {
+  // kerberos: self-explanatory
+  // x_coords: string of x-coordinates to be POSTed, formatted by ImageCoords.get1DCoords
+  // y_coords: string of y-coordinates to be posted
+  if (client.connect("iesc-s1.mit.edu", 80)) {
+    String data = "kerberos="+kerberos+"&x_coords="+x_coords+"&y_coords="+y_coords;
+    client.println("POST "+url_base+" HTTP/1.1");
+    client.println("Host: iesc-s1.mit.edu");
+    client.println("Content-Type: application/x-www-form-urlencoded");
+    client.println("Content-Length: " + String(data.length()));
+    client.print("\r\n");
+    client.print(data);
+    Serial.println("Posted to server:\n"+data);
+  }
+}
+
 
