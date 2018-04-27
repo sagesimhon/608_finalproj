@@ -38,8 +38,10 @@ int lastB1 = b1.getState();                 // Last seen states of button1 and b
 int lastB2 = b2.getState();
 
 //////////////////////// POST REQUESTS ////////////////////////////
-String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
+//String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
+String url_base = "/608dev/sandbox/jfusman/server.py";
 String KERBEROS = "dainkim"; // CHANGE FOR YOUR OWN KERBEROS
+int incr_id = 0; //create incrementing id 
 
 //////////////////////// CANVAS DIMENSIONS ////////////////////////
 const int upperbound = 200; // currently, this indicates both width and height of canvas
@@ -93,6 +95,7 @@ void loop(){
           POST_request(KERBEROS, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false));
           numSavedPoints = 0;
           lastB1 = b1.getState();
+          incr_id += 1; //increment id after it posts
           state = POST_DRAW_INSTRUCTIONS;
         }
         break;
@@ -120,7 +123,8 @@ void setup() {
   setup_imu();                           //imu
 
                                         // Setup wifi
-  WiFi.begin("MIT",""); //attempt to connect to wifi 
+  //WiFi.begin("MIT",""); //attempt to connect to wifi 
+  WiFi.begin("6s08","iesc6s08"); 
   int count = 0; //count used for Wifi check times
     while (WiFi.status() != WL_CONNECTED && count<6) {
       delay(500);
