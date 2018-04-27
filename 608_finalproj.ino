@@ -181,16 +181,16 @@ void setup_imu(){
   imu.getGres(); 
 }
 
-void modifyReading(float &reading, float upperbound, float maxpossible float lowercap) {
+void modifyReading(float &reading, float upperbound, float maxpossible, float lowercap) {
   // &reading      : address of imu or sensor reading to be scaled and modified
   // upperbound    : upper bound that the modified reading will be scaled according to (canvas size)
   // maxpossible   : highest possible value of reading to be mapped to upperbound 
   // lowercap      : lower bound; any values lower than lowercap will be taken as the same value as lowercap and mapped to 0
-  if (reading < lowercap):
+  if (reading < lowercap) {
     reading = 0;
-  else:
+  } else {
     float m = upperbound/(maxpossible - lowercap);
     reading = m*reading - m*lowercap;
-  
+  }
 }
 
