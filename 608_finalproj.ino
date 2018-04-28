@@ -31,6 +31,9 @@ int pointsToSave = 50;                      // size of our ImageCoords
 ImageCoords img(pointsToSave);
 int numSavedPoints = 0;                     // number of points that haven't been posted
 
+int idSeq = 0;
+String imageId = "img" + String(idSeq);     // ID if the current image we're drawing
+
 //////////////////////// BUTTONS //////////////////////////////////
 Button b1(15, 2);
 Button b2(2, 2);
@@ -39,9 +42,8 @@ int lastB2 = b2.getState();
 
 //////////////////////// POST REQUESTS ////////////////////////////
 //String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
-String url_base = "/608dev/sandbox/jfusman/server.py";
-String KERBEROS = "dainkim"; // CHANGE FOR YOUR OWN KERBEROS
-int incr_id = 0; //create incrementing id 
+String url_base = "/608dev/sandbox/e_shea/server.py";
+String KERBEROS = "e_shea"; // CHANGE FOR YOUR OWN KERBEROS
 
 //////////////////////// CANVAS DIMENSIONS ////////////////////////
 const int upperbound = 200; // currently, this indicates both width and height of canvas
@@ -58,12 +60,15 @@ void loop(){
         if (lastB1 != b1.getState()){
           lastB1 = b1.getState();
           state = DRAW;
+          
+          imageId = "img" + String(idSeq);    // Give this new image a new name
+          idSeq += 1;
         }
         break;
       
       // CONTINUOUSLY SAMPLE INPUTS FROM SENSOR AND POST TO SERVER 
       case DRAW:
-        print_instructions("I'm drawing. press b again to stop");
+        print_instructions("I'm drawing on '" + imageId + "'. press b again to stop");
         if (millis() - lastSampleTime >= sampleFrequency){
           lastSampleTime = millis();
           numSavedPoints += 1;
@@ -79,23 +84,17 @@ void loop(){
 
         // ImageCoords is full, time to post.
         if(numSavedPoints == pointsToSave){
-          Serial.println("---------I would upload now");
-          Serial.println("--- X Coords :" + img.get1DCoords(numSavedPoints, true, false));
-          Serial.println("--- Y Coords :" + img.get1DCoords(numSavedPoints, false, false));
-          POST_request(KERBEROS, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false));
+          POST_request(imageId, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false));
           numSavedPoints = 0;
           }
 
         // Button was pressed. Change states
         if(lastB1 != b1.getState()){
           // DO A FINAL POST
-          Serial.println("-------Uploading remaining values..");
-          Serial.println("--- X Coords :" + img.get1DCoords(numSavedPoints, true, false));
-          Serial.println("--- Y Coords :" + img.get1DCoords(numSavedPoints, false, false));
-          POST_request(KERBEROS, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false));
+          POST_request(imageId, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false));
           numSavedPoints = 0;
+          
           lastB1 = b1.getState();
-          incr_id += 1; //increment id after it posts
           state = POST_DRAW_INSTRUCTIONS;
         }
         break;
@@ -123,8 +122,8 @@ void setup() {
   setup_imu();                           //imu
 
                                         // Setup wifi
-  //WiFi.begin("MIT",""); //attempt to connect to wifi 
-  WiFi.begin("6s08","iesc6s08"); 
+  WiFi.begin("MIT",""); //attempt to connect to wifi 
+  //WiFi.begin("6s08","iesc6s08"); 
   int count = 0; //count used for Wifi check times
     while (WiFi.status() != WL_CONNECTED && count<6) {
       delay(500);
@@ -213,33 +212,45 @@ int modifyReading(float reading) {
     return (int)scaled_reading;
   }
 }
-//// BELOW IS THE OLD FUNCTION
-//void modifyReading(float &reading, float upperbound, float maxpossible, float lowercap) {
-//  // &reading      : address of imu or sensor reading to be scaled and modified
-//  // upperbound    : upper bound that the modified reading will be scaled according to (canvas size)
-//  // maxpossible   : highest possible value of reading to be mapped to upperbound 
-//  // lowercap      : lower bound; any values lower than lowercap will be taken as the same value as lowercap and mapped to 0
-//  if (reading < lowercap) {
-//    reading = 0;
-//  } else {
-//    float m = upperbound/(maxpossible - lowercap);
-//    reading = m*reading - m*lowercap;
-//  }
-//}
 
-void POST_request(String kerberos, String x_coords, String y_coords) {
+void POST_request(String imageId, String x_coords, String y_coords) {
   // kerberos: self-explanatory
   // x_coords: string of x-coordinates to be POSTed, formatted by ImageCoords.get1DCoords
   // y_coords: string of y-coordinates to be posted
+  Serial.println("inside POST_request");
   if (client.connect("iesc-s1.mit.edu", 80)) {
-    String data = "kerberos="+kerberos+"&x_coords="+x_coords+"&y_coords="+y_coords;
+    String data = "image_id=" + imageId + "&x_coords=" +x_coords + "&y_coords=" +y_coords;
     client.println("POST "+url_base+" HTTP/1.1");
     client.println("Host: iesc-s1.mit.edu");
     client.println("Content-Type: application/x-www-form-urlencoded");
     client.println("Content-Length: " + String(data.length()));
     client.print("\r\n");
     client.print(data);
-    Serial.println("Posted to server:\n"+data);
+  
+    // delete later
+    unsigned long count = millis();
+    while (client.connected()) { //while we remain connected read out data coming back
+      String line = client.readStringUntil('\n');
+      Serial.println(line);
+      if (line == "\r") { //found a blank line!
+        //headers have been received! (indicated by blank line)
+        break;
+      }
+      if (millis()-count>response_timeout) break;
+    }
+    count = millis();
+    String op; //create empty String object
+    while (client.available()) { //read out remaining text (body of response)
+      op+=(char)client.read();
+    }
+    Serial.println(op);
+    client.stop();
+    Serial.println();
+    Serial.println("-----------");
+    }
+  else{
+    delay(300);                               // wait a bit and try to post again
+    POST_request(imageId, x_coords, y_coords);
   }
 }
 
