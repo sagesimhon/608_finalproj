@@ -31,9 +31,6 @@ int pointsToSave = 50;                      // size of our ImageCoords
 ImageCoords img(pointsToSave);
 int numSavedPoints = 0;                     // number of points that haven't been posted
 
-int idSeq = 0;
-String imageId = "img" + String(idSeq);     // ID if the current image we're drawing
-
 //////////////////////// BUTTONS //////////////////////////////////
 Button b1(15, 2);
 Button b2(2, 2);
@@ -43,7 +40,8 @@ int lastB2 = b2.getState();
 //////////////////////// POST REQUESTS ////////////////////////////
 //String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
 String url_base = "/608dev/sandbox/e_shea/server.py";
-String KERBEROS = "e_shea"; // CHANGE FOR YOUR OWN KERBEROS
+int idSeq = 0;
+String imageId = "img" + String(idSeq);     // ID if the current image we're drawing
 
 //////////////////////// CANVAS DIMENSIONS ////////////////////////
 const int upperbound = 200; // currently, this indicates both width and height of canvas
