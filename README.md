@@ -19,13 +19,17 @@ milestones: https://docs.google.com/spreadsheets/d/1dAaHvU9l2HsWnL9xeRB0oCax8zR0
 
 ### UPDATES
 
-4/28/ 18
+4/27/ 18
+
+1. ESP code uses autoincrementing image ID
+2. server code now keys into `request` with `form`.
+3. TODO: integrate sensor
 
 1. The request functions take in the x_coords, y_coords, entry_id
 2. The server will display a picture based on the coordinates
 3. I created an autoincrement id, but I did not add it to the post request-- should this id replace kerberos?
 4. TODOS:
-    -unhardcode the kerberos in the server code-- work on implementing autoincrement id
+    -~~unhardcode the kerberos in the server code-- work on implementing autoincrement id~~
     -We should also start hacking out the sensors
 4/27/18:
 1. ESP `POST_request` function is defined
