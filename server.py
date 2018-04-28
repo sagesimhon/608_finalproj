@@ -8,6 +8,7 @@ images_db = '__HOME__/images.db'
 
 def request_handler(request):
     """
+    TODO fix this docstring.
  {'is_json': False, 'values': {'x_coords': '174.00,161.00,147.00,162.00,78.00,101.00,200.00,180.00,122.00,53.00,21.00,0.00,91.00,184.00,200.00,200.00,153.00,130.00,97.00,105.00,106.00,122.00,120.00,94.00,', 'y_coords': '38.00,55.00,48.00,62.00,37.00,0.00,0.00,4.00,137.00,183.00,186.00,5.00,0.00,0.00,0.00,0.00,96.00,117.00,84.00,58.00,48.00,38.00,40.00,65.00,', 'entry_id': 'jfusman'}, 'form': {'score': '22', 'ID': '5'}, 'args': ['x_coords', 'y_coords', 'entry_id'], 'method': 'POST'})
 
  
@@ -17,13 +18,19 @@ def request_handler(request):
     #entry_id = "star"
     #x_coords = "60,20,110,10,100,60,"
     #y_coords = "20,110,50,50,110,20,"
+
+    entry_id = "default"
+
     if request['method'] == 'POST':
-        x_coords = request['values']['x_coords']
-        y_coords = request['values']['y_coords']
-        entry_id = request['values']['kerberos']
+        x_coords = request['form']['x_coords']
+        y_coords = request['form']['y_coords']
+        entry_id = request['form']['image_id']
         post(entry_id, x_coords, y_coords);
-    if request['method'] == 'GET':
-        return get_html("jfusman");
+    else:
+        assert request['method'] == 'GET'
+        entry_id = request['values']['image_id']
+    
+    return get_html(entry_id);
 
 def post(entry_id, x_coords, y_coords):
     """
