@@ -19,6 +19,7 @@ def request_handler(request):
     #x_coords = "60,20,110,10,100,60,"
     #y_coords = "20,110,50,50,110,20,"
 
+    # TODO put a hard-coded default image in the server. would be nice if it displayed a hand-drawn error message
     entry_id = "default"
 
     if request['method'] == 'POST':
@@ -27,8 +28,12 @@ def request_handler(request):
         entry_id = request['form']['image_id']
         post(entry_id, x_coords, y_coords);
     else:
-        assert request['method'] == 'GET'
-        entry_id = request['values']['image_id']
+    # Get requests use 'values' instead of 'form'. idk why. TODO figure this out and make everything uniform
+        assert request['method'] == 'GET' 
+        try:
+            entry_id = request['values']['image_id']
+        except:
+            pass
     
     return get_html(entry_id);
 
