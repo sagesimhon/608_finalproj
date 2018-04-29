@@ -19,7 +19,6 @@ def request_handler(request):
     #x_coords = "60,20,110,10,100,60,"
     #y_coords = "20,110,50,50,110,20,"
 
-    # TODO put a hard-coded default image in the server. would be nice if it displayed a hand-drawn error message
     entry_id = "default"
 
     if request['method'] == 'POST':
@@ -75,8 +74,9 @@ def get_html(entry_id):
     all_ys = c.execute('''SELECT y_coords from image where id == ? ORDER BY t ASC''',(entry_id,)).fetchall();
 
     # [x1,x2,x3,x4...xn] as a string NOTE THAT THERE IS NO TRAILING COMMA a trailing comma will fuck up the javascript
-    xCoords = ("[" + "".join(all_xs))[:-1] + "]"
-    yCoords = ("[" + "".join(all_ys))[:-1] + "]"
+    xCoords = "[" + ("".join(all_xs))[:-1] + "]"
+    yCoords = "[" + ("".join(all_ys))[:-1] + "]"
+    entry_id = "\'" + entry_id + "\'"
     conn.close()
 
     '''
@@ -105,22 +105,28 @@ def get_html(entry_id):
                     </canvas>
 
                     <script>
-
+                        var imgID = ''' + entry_id + ';''' + '''
                         var c = document.getElementById("myCanvas");
                         var ctx = c.getContext("2d");
 
+                        if(imgID !== 'default'){
 
-                        var xCoords = ''' + xCoords + ';''' + '''
-                        var yCoords = ''' + yCoords + ';''' + '''
+                            var xCoords = ''' + xCoords + ';''' + '''
+                            var yCoords = ''' + yCoords + ';''' + '''
 
-                        ctx.beginPath();
-                        ctx.moveTo(xCoords[0], yCoords[0]);
+                            ctx.beginPath();
+                            ctx.moveTo(xCoords[0], yCoords[0]);
 
-                        for(var i = 0; i < xCoords.length; i++){
-                            ctx.lineTo(xCoords[i], yCoords[i]);
+                            for(var i = 0; i < xCoords.length; i++){
+                                ctx.lineTo(xCoords[i], yCoords[i]);
+                            }
+                            ctx.strokeStyle = "black";
+                            ctx.stroke();
                         }
-                        ctx.strokeStyle = "black";
-                        ctx.stroke();
+                        else{
+                            ctx.font = "10px Arial";
+                            ctx.fillText("Bad GET request. Specify your image id",10,50);
+                        }
 
                     </script>
 
