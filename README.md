@@ -5,6 +5,12 @@
 project proposal: https://docs.google.com/document/d/1MmS5aJmTf7h9zif0waNb0SbHrCHV8-rOJm8-NlFZWDQ/edit
 milestones: https://docs.google.com/spreadsheets/d/1dAaHvU9l2HsWnL9xeRB0oCax8zR0Zb-WK1GE9FGS7pE/edit#gid=0
 
+ADNS 9800 Sensor: 
+https://github.com/mrjohnk/ADNS-9800 //useful github code
+https://www.tindie.com/products/jkicklighter/adns-9800-laser-motion-sensor/ //useful information about sensor
+https://datasheet.octopart.com/ADNS-9800-Avago-datasheet-10666463.pdf //the datasheet
+https://github.com/pepijndevos/Dwergmuis
+
 #### General Workflow:
 1. PULL BEFORE YOU START WORKING!!
 2. Message out the files you'll be working on and the changes you'll make.
