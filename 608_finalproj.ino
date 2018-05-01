@@ -39,7 +39,7 @@ int lastB2 = b2.getState();
 
 //////////////////////// POST REQUESTS ////////////////////////////
 //String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
-String url_base = "/608dev/sandbox/e_shea/server.py";
+String url_base = "/608dev/sandbox/jfusman/server.py";
 int idSeq = 0;
 String imageId = "img" + String(idSeq);     // ID if the current image we're drawing
 
