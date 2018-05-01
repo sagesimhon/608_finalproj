@@ -4,7 +4,9 @@
 #include <WiFi.h>
 #include <SPI.h>
 #include "Button.h"
-#include "ImageCoords.h";
+#include "ImageCoords.h"
+#include "Artist.h"
+
 
 //change 
 const int response_timeout = 6000; //ms to wait for response from host
@@ -21,6 +23,14 @@ WiFiClient client;
 #define UPLOAD 1
 #define DOWNLOAD 2
 
+//////////////////////// POST REQUESTS ////////////////////////////
+//String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
+String url_base = "/608dev/sandbox/e_shea/server.py";
+int idSeq = 0;
+String imageId = "img" + String(idSeq);     // ID if the current image we're drawing
+String kerberos = "dainkim";
+
+
 /////////////////// SAMPLING AND SAVING INFORMATION ////////////////
 int state = INSTRUCTIONS;
 unsigned long lastSampleTime = millis();    // Used to determine whether its time to sample again
@@ -28,7 +38,7 @@ int sampleFrequency = 100;                  // Take a position sample every 100 
 int globalCounter = 0;                      // This is used for testing purposes
 
 int pointsToSave = 50;                      // size of our ImageCoords
-ImageCoords img(pointsToSave);
+Artist artist(pointsToSave, imageId, "black");
 int numSavedPoints = 0;                     // number of points that haven't been posted
 
 //////////////////////// BUTTONS //////////////////////////////////
@@ -37,13 +47,6 @@ Button b2(2, 2);
 int lastB1 = b1.getState();                 // Last seen states of button1 and button2
 int lastB2 = b2.getState();
 
-//////////////////////// POST REQUESTS ////////////////////////////
-
-String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
-//String url_base = "/608dev/sandbox/e_shea/server.py";
-int idSeq = 0;
-String imageId = "img" + String(idSeq);     // ID if the current image we're drawing
-String kerberos = "dainkim";
 
 //////////////////////// CANVAS DIMENSIONS ////////////////////////
 const int upperbound = 200; // currently, this indicates both width and height of canvas
@@ -63,6 +66,8 @@ void loop(){
           
           imageId = "img" + String(idSeq);    // Give this new image a new name
           idSeq += 1;
+          artist.clearPoints();
+          artist.changeCurrentImage(imageId);
         }
         break;
       
@@ -78,20 +83,24 @@ void loop(){
           // scale points before adding to image
           float x = imu.accelCount[0]*imu.aRes;
           float y = imu.accelCount[1]*imu.aRes;
-          img.addToImage(modifyReading(x), modifyReading(y));
+          artist.addToImage(modifyReading(x), modifyReading(y));
           globalCounter++;
         }
 
         // ImageCoords is full, time to post.
         if(numSavedPoints == pointsToSave){
-          POST_request(imageId, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false), kerberos);
+          Serial.println("-------posting now:");
+          Serial.println(artist.getMostRecentPoints(numSavedPoints, true));
+          Serial.println(artist.getMostRecentPoints(numSavedPoints, false));
+          POST_request(artist.getCurrentImage(), artist.getMostRecentPoints(numSavedPoints, true), artist.getMostRecentPoints(numSavedPoints, false), artist.getCurrentColor());//img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false), kerberos);
           numSavedPoints = 0;
           }
 
         // Button was pressed. Change states
         if(lastB1 != b1.getState()){
           // DO A FINAL POST
-          POST_request(imageId, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false), kerberos);
+          POST_request(artist.getCurrentImage(), artist.getMostRecentPoints(numSavedPoints, true), artist.getMostRecentPoints(numSavedPoints, false), artist.getCurrentColor());//img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false), kerberos);
+          artist.clearPoints();
           numSavedPoints = 0;
           
           lastB1 = b1.getState();
@@ -213,13 +222,13 @@ int modifyReading(float reading) {
   }
 }
 
-void POST_request(String imageId, String x_coords, String y_coords, String kerberos) {
+void POST_request(String imageId, String x_coords, String y_coords, String color) {
   // kerberos: self-explanatory
   // x_coords: string of x-coordinates to be POSTed, formatted by ImageCoords.get1DCoords
   // y_coords: string of y-coordinates to be posted
   Serial.println("inside POST_request");
   if (client.connect("iesc-s1.mit.edu", 80)) {
-    String data = "image_id=" + imageId + "&x_coords=" +x_coords + "&y_coords=" +y_coords + "&kerberos=" + kerberos;
+    String data = "image_id=" + imageId + "&x_coords=" +x_coords + "&y_coords=" +y_coords + "&color=" + color;
     client.println("POST "+url_base+" HTTP/1.1");
     client.println("Host: iesc-s1.mit.edu");
     client.println("Content-Type: application/x-www-form-urlencoded");
@@ -250,7 +259,7 @@ void POST_request(String imageId, String x_coords, String y_coords, String kerbe
     }
   else{
     delay(300);                               // wait a bit and try to post again
-    POST_request(imageId, x_coords, y_coords, kerberos);
+    POST_request(imageId, x_coords, y_coords, color);
   }
 }
 
