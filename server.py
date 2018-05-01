@@ -19,37 +19,39 @@ def request_handler(request):
  
     """
 
-    # Hard coded coordinates to draw a star
-    #entry_id = "star"
-    x_coords = "60,20,110,10,100,60,"
-    y_coords = "20,110,50,50,110,20,"
-    color = "black";
-    post("star", x_coords, y_coords, color)
+    ## UNCOMMENT THE BELOW TO SEE TWO STARS ON THE SERVER. ACCESS THE SERVER AT JUST PLAIN SANDBOX URL, NO PARMS
+    # # Hard coded coordinates to draw a star
+    # #entry_id = "star"
+    # x_coords = "60,20,110,10,100,60,"
+    # y_coords = "20,110,50,50,110,20,"
+    # color = "black";
+    # post("star", x_coords, y_coords, color)
 
-    x_coords = "70,30,120,20,110,70,"
-    y_coords = "30,120,60,60,120,30,"
-    color = "red";
-    post("star", x_coords, y_coords, color)
+    # x_coords = "70,30,120,20,110,70,"
+    # y_coords = "30,120,60,60,120,30,"
+    # color = "red";
+    # post("star", x_coords, y_coords, color)
+
+    # return get_html("star")
 
     entry_id = "default"
 
-    return get_html("star")
 
-    # if request['method'] == 'POST':
-    #     x_coords = request['form']['x_coords']
-    #     y_coords = request['form']['y_coords']
-    #     entry_id = request['form']['image_id']
-    #     kerberos = request['form']['kerberos']
-    #     post(entry_id, x_coords, y_coords, kerberos);
-    # else:
-    # # Get requests use 'values' instead of 'form'. idk why. TODO figure this out and make everything uniform
-    #     assert request['method'] == 'GET' 
-    #     try:
-    #         entry_id = request['values']['image_id']
-    #     except:
-    #         pass
+    if request['method'] == 'POST':
+        x_coords = request['form']['x_coords']
+        y_coords = request['form']['y_coords']
+        entry_id = request['form']['image_id']
+        color = request['form']['color']
+        post(entry_id, x_coords, y_coords, color);
+    else:
+    # Get requests use 'values' instead of 'form'. idk why. TODO figure this out and make everything uniform
+        assert request['method'] == 'GET' 
+        try:
+            entry_id = request['values']['image_id']
+        except:
+            pass
     
-    # return get_html(entry_id);
+    return get_html(entry_id);
 
 def post(entry_id, x_coords, y_coords, color):
     """
