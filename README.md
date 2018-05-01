@@ -34,7 +34,25 @@ VI- 3v3
    so that everyone else knows to pull.
 
 ### UPDATES
+
 5/1/2018
+
+tldr; the state of esp + server ultimately has not changed. However, the server has more capabilities 
+that are functional provided that the ESP code changes to use these capabilities.
+
+1. Server code is functional provided that its given proper get and post requests. 
+   the javascript essentially "picks up the pen" when colors have changed.
+2. POST requests have changed. Need to specify `color`. 
+3. Added Artist class. Purpose of this class is to encapsulate all image related attributes, specifically
+   The image name, the color the artist is using to draw, and the actual data points of the image.
+   Purpose of ths class is to also give us the option to NOT hard-code things such as colors.
+4. ESP code has been updated to format correct posts. 
+5. TODOS:
+   - integrate delta x and y values and read these values in the ESP code
+   - add states to the ESP:
+        a. one to allow the user to input which image he would like to draw on
+        b. allow the user to pick his color
+-------------------
 1. Added ESP code that uses the ADNS 9800 sensor and returns delta x and delta y values
 3. TODOS:
 1. integrate the delta x and y values
