@@ -12,8 +12,8 @@ https://datasheet.octopart.com/ADNS-9800-Avago-datasheet-10666463.pdf //the data
 https://github.com/pepijndevos/Dwergmuis
 https://github.com/joshuajnoble/ArduinoADNS-9800.git //arduino code
 Circuitry:
-MOT- IO0
-SS- RX- 1O3 
+MOT- not plugged in
+SS- RXD- 1O3
 DG- GND
 AG - GND
 MO- 1O23
