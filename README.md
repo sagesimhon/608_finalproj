@@ -34,6 +34,12 @@ VI- 3v3
    so that everyone else knows to pull.
 
 ### UPDATES
+5/1/2018
+1. Added ESP code that uses the ADNS 9800 sensor and returns delta x and delta y values
+3. TODOS:
+1. integrate the delta x and y values
+2. replace these values with the imu values in the 608_finalproj.ino code
+3. Hardware: create better mechanism for drawing 
 
 4/27/ 18
 
