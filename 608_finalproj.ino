@@ -38,10 +38,12 @@ int lastB1 = b1.getState();                 // Last seen states of button1 and b
 int lastB2 = b2.getState();
 
 //////////////////////// POST REQUESTS ////////////////////////////
-//String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
-String url_base = "/608dev/sandbox/jfusman/server.py";
+
+String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
+//String url_base = "/608dev/sandbox/e_shea/server.py";
 int idSeq = 0;
 String imageId = "img" + String(idSeq);     // ID if the current image we're drawing
+String kerberos = "dainkim";
 
 //////////////////////// CANVAS DIMENSIONS ////////////////////////
 const int upperbound = 200; // currently, this indicates both width and height of canvas
@@ -82,14 +84,14 @@ void loop(){
 
         // ImageCoords is full, time to post.
         if(numSavedPoints == pointsToSave){
-          POST_request(imageId, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false));
+          POST_request(imageId, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false), kerberos);
           numSavedPoints = 0;
           }
 
         // Button was pressed. Change states
         if(lastB1 != b1.getState()){
           // DO A FINAL POST
-          POST_request(imageId, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false));
+          POST_request(imageId, img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false), kerberos);
           numSavedPoints = 0;
           
           lastB1 = b1.getState();
@@ -211,13 +213,13 @@ int modifyReading(float reading) {
   }
 }
 
-void POST_request(String imageId, String x_coords, String y_coords) {
+void POST_request(String imageId, String x_coords, String y_coords, String kerberos) {
   // kerberos: self-explanatory
   // x_coords: string of x-coordinates to be POSTed, formatted by ImageCoords.get1DCoords
   // y_coords: string of y-coordinates to be posted
   Serial.println("inside POST_request");
   if (client.connect("iesc-s1.mit.edu", 80)) {
-    String data = "image_id=" + imageId + "&x_coords=" +x_coords + "&y_coords=" +y_coords;
+    String data = "image_id=" + imageId + "&x_coords=" +x_coords + "&y_coords=" +y_coords + "&kerberos=" + kerberos;
     client.println("POST "+url_base+" HTTP/1.1");
     client.println("Host: iesc-s1.mit.edu");
     client.println("Content-Type: application/x-www-form-urlencoded");
@@ -248,7 +250,7 @@ void POST_request(String imageId, String x_coords, String y_coords) {
     }
   else{
     delay(300);                               // wait a bit and try to post again
-    POST_request(imageId, x_coords, y_coords);
+    POST_request(imageId, x_coords, y_coords, kerberos);
   }
 }
 
