@@ -10,6 +10,15 @@ https://github.com/mrjohnk/ADNS-9800 //useful github code
 https://www.tindie.com/products/jkicklighter/adns-9800-laser-motion-sensor/ //useful information about sensor
 https://datasheet.octopart.com/ADNS-9800-Avago-datasheet-10666463.pdf //the datasheet
 https://github.com/pepijndevos/Dwergmuis
+Circuitry:
+MOT- IO0
+SS- RX- 1O3 
+DG- GND
+AG - GND
+MO- 1O23
+SC- IO18
+MI- IO19
+VI- 3v3
 
 #### General Workflow:
 1. PULL BEFORE YOU START WORKING!!
