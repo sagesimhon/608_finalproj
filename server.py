@@ -89,9 +89,9 @@ def get_html(entry_id):
 
     rows = c.execute('''SELECT x_coords, y_coords, color from image WHERE id == ? ORDER BY t ASC''', (entry_id,)).fetchall();
     conn.close()
-    point_and_color = []
-    for x, y, color in rows:
-        point_and_color.extend( [list(coord) + [color] for coord in zip(x[:-1].split(","), y[:-1].split(","))])
+
+    # [ [x, y, color], [x, y, color], [x, y, color]...]
+    point_and_color = [list(coord) + [color] for x, y, color in rows for coord in zip(x[:-1].split(","), y[:-1].split(",")) ]
 
 
     # # [ 'x1,x2,x3,x4,', 'x5,x6,x7,x8,', ...] where x1 is the OLDEST pixel
