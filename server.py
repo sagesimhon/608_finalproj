@@ -5,6 +5,7 @@ import datetime
 
 
 images_db = '__HOME__/images.db'
+colordict = {'dainkim':'red','jfusman':'blue','e_shea':'green','simhon':'purple'}
 
 def request_handler(request):
     """
@@ -25,7 +26,8 @@ def request_handler(request):
         x_coords = request['form']['x_coords']
         y_coords = request['form']['y_coords']
         entry_id = request['form']['image_id']
-        post(entry_id, x_coords, y_coords);
+        kerberos = request['form']['kerberos']
+        post(entry_id, x_coords, y_coords, kerberos);
     else:
     # Get requests use 'values' instead of 'form'. idk why. TODO figure this out and make everything uniform
         assert request['method'] == 'GET' 
@@ -36,7 +38,7 @@ def request_handler(request):
     
     return get_html(entry_id);
 
-def post(entry_id, x_coords, y_coords):
+def post(entry_id, x_coords, y_coords, kerberos):
     """
     adds the x and y coords to the image specified by entry_id
 
@@ -49,11 +51,11 @@ def post(entry_id, x_coords, y_coords):
     c = conn.cursor()
 
     try:
-        c.execute('''CREATE TABLE image (id text, t timestamp, x_coords text, y_coords text);''')
+        c.execute('''CREATE TABLE image (id text, t timestamp, x_coords text, y_coords text, color text);''')
     except:
         pass
 
-    c.execute('''INSERT into image VALUES (?, ?, ?, ?);''', (entry_id, datetime.datetime.now(), x_coords, y_coords));
+    c.execute('''INSERT into image VALUES (?, ?, ?, ?, ?);''', (entry_id, datetime.datetime.now(), x_coords, y_coords, colordict[kerberos]));
 
     conn.commit();
     conn.close();
@@ -72,6 +74,7 @@ def get_html(entry_id):
     # [ 'x1,x2,x3,x4,', 'x5,x6,x7,x8,', ...] where x1 is the OLDEST pixel
     all_xs = c.execute('''SELECT x_coords from image WHERE id == ? ORDER BY t ASC''', (entry_id,)).fetchall();
     all_ys = c.execute('''SELECT y_coords from image where id == ? ORDER BY t ASC''',(entry_id,)).fetchall();
+    color = c.execute('''SELECT color from image where id == ? ORDER BY t ASC''',(entry_id,)).fetchone();
 
     # [x1,x2,x3,x4...xn] as a string NOTE THAT THERE IS NO TRAILING COMMA a trailing comma will fuck up the javascript
     xCoords = "[" + ("".join(all_xs))[:-1] + "]"
@@ -120,7 +123,7 @@ def get_html(entry_id):
                             for(var i = 0; i < xCoords.length; i++){
                                 ctx.lineTo(xCoords[i], yCoords[i]);
                             }
-                            ctx.strokeStyle = "black";
+                            ctx.strokeStyle = "''' + color + '";''' + '''
                             ctx.stroke();
                         }
                         else{
