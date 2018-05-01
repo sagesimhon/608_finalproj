@@ -38,7 +38,7 @@ int sampleFrequency = 100;                  // Take a position sample every 100 
 int globalCounter = 0;                      // This is used for testing purposes
 
 int pointsToSave = 50;                      // size of our ImageCoords
-Artist artist(pointsToSave, imageId, "black");
+Artist artist(pointsToSave, imageId, "red");
 int numSavedPoints = 0;                     // number of points that haven't been posted
 
 //////////////////////// BUTTONS //////////////////////////////////
@@ -235,27 +235,29 @@ void POST_request(String imageId, String x_coords, String y_coords, String color
     client.println("Content-Length: " + String(data.length()));
     client.print("\r\n");
     client.print(data);
-  
-    // delete later
-    unsigned long count = millis();
-    while (client.connected()) { //while we remain connected read out data coming back
-      String line = client.readStringUntil('\n');
-      Serial.println(line);
-      if (line == "\r") { //found a blank line!
-        //headers have been received! (indicated by blank line)
-        break;
-      }
-      if (millis()-count>response_timeout) break;
-    }
-    count = millis();
-    String op; //create empty String object
-    while (client.available()) { //read out remaining text (body of response)
-      op+=(char)client.read();
-    }
-    Serial.println(op);
+
     client.stop();
-    Serial.println();
-    Serial.println("-----------");
+//    // delete later
+//    unsigned long count = millis();
+//    while (client.connected()) { //while we remain connected read out data coming back
+//      String line = client.readStringUntil('\n');
+//      Serial.println(line);
+//      if (line == "\r") { //found a blank line!
+//        //headers have been received! (indicated by blank line)
+//        break;
+//      }
+//      if (millis()-count>response_timeout) break;
+//    }
+//    count = millis();
+//    String op; //create empty String object
+//    while (client.available()) { //read out remaining text (body of response)
+//      op+=(char)client.read();
+//    }
+//    Serial.println(op);
+//    client.stop();
+//    Serial.println();
+//    Serial.println("-----------");
+
     }
   else{
     delay(300);                               // wait a bit and try to post again
