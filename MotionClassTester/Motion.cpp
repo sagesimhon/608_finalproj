@@ -1,16 +1,16 @@
 #include "Arduino.h"
 #include "Motion.h"
 
-Motion::Motion(float canvas_x, float canvas_y) {
+Motion::Motion(float width, float height) {
   
-  // canvas_x: width of canvas
-  // canvas_y: height of canvas
+  // width: width of canvas
+  // height: height of canvas
   // starting_pos_x and _y: initial x/y starting positions for drawings (0,0 defined at top left corner of canvas -- calibrated so that origin is now at center of canvas)
   
-  float starting_pos_x = 0 + canvas_x/2;
-  float starting_pos_y = 0 + canvas_y/2; 
-  float canvas_x = canvas_x;
-  float canvas_y = canvas_y;
+  float starting_pos_x = 0 + width/2;
+  float starting_pos_y = 0 + height/2; 
+  float canvas_x = width;
+  float canvas_y = height;
   
 }
 
@@ -22,17 +22,17 @@ float Motion::vel_to_pos(float vel, bool isX) {
 // origin is defined as top left of canvas
 // isX true if vel is x value, false if y value 
 // if isX = false, negative velocity corresponds to increasing y position based on origin definition
-
+  float starting_pos;
   float negate; 
   if (isX) {
     negate = 1; }
   else if (!isX) {
     negate = -1; }
-  float dt = 20;
+  float dt = 20; // ms
   float pos = starting_pos + dt*vel*negate;
   if (isX) {
     starting_pos_x = pos; }
-  if (isY) {
+  else {
     starting_pos_y = pos;
   }
 
