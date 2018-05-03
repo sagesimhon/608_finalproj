@@ -35,6 +35,11 @@ VI- 3v3
 
 ### UPDATES
 
+5/3/18
+
+1. added a class that returns the delta x and delta y readings from sensor
+2. TODO: covert these to position values and scale them for the canvas
+
 5/1/2018
 
 tldr; the state of esp + server ultimately has not changed. However, the server has more capabilities 
