@@ -13,7 +13,7 @@ class Motion
     Motion(float width, float height);
     float vel_to_pos(float vel, bool isX);
     float disp_to_pos(float disp, bool isX);
-      
+    float scale(float minimumG, float maximumG, float minimumR, float maximumR);
 };
 
 #endif

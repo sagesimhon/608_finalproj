@@ -76,4 +76,10 @@ else {
 return pos;
 }
 
+float Motion::scale(float minimumG, float maximumG, float minimumR, float maximumR) {
+// minimumG/maximumG: minimum/maximum value (including (-) number for minimum) that is provided 
+// minimumR/maximumR: minimum/maximum value (including (-) number for minimum) to scale displacements to -- smaller magnitudes = less sensitive
+
+}
+
 
