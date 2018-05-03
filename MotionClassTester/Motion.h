@@ -10,7 +10,7 @@ class Motion
   public:
     float starting_pos_x;
     float starting_pos_y;
-    Motion(float canvas_x, float canvas_y);
+    Motion(float width, float height);
     float vel_to_pos(float vel, bool isX);
     float disp_to_pos(float disp, bool isX);
       
