@@ -35,6 +35,11 @@ VI- 3v3
 
 ### UPDATES
 
+5/4/18
+1.integrated the sensor into the 608_finalproj.ino
+2. tested it on the server and it works!
+3. TODO: work on the accuracy of the drawings.
+
 5/3/18
 
 1. added a class that returns the delta x and delta y readings from sensor
