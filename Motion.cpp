@@ -7,10 +7,10 @@ Motion::Motion(float width, float height) {
   // height: height of canvas
   // starting_pos_x and _y: initial x/y starting positions for drawings (0,0 defined at top left corner of canvas -- calibrated so that origin is now at center of canvas)
   
-  float starting_pos_x = 0 + width/2;
-  float starting_pos_y = 0 + height/2; 
-  float canvas_x = width;
-  float canvas_y = height;
+  starting_pos_x = 0 + width/2;
+  starting_pos_y = 0 + height/2; 
+  canvas_x = width;
+  canvas_y = height;
   
 }
 
@@ -40,7 +40,7 @@ float Motion::vel_to_pos(float vel, bool isX) {
 
 }
 
-float Motion::disp_to_pos(float disp, bool isX) {
+int Motion::disp_to_pos(float disp, bool isX) {
   
 // NOTE: ADNS reads relative x and y displacement values (DeltaX and DeltaY)
 // disp: relative displacement value [units]
@@ -50,7 +50,7 @@ float Motion::disp_to_pos(float disp, bool isX) {
 // Updates starting_pos_x or starting_pos_y to new initial position (sets starting_pos_x or _y to returned position) 
 // if isX = false, negative disp corresponds to increase in y position based on origin definition (use var negate for this)
 
-// TODO FIX UNITS FROM ADNS 
+// TODO FIX UNITS/SCALING FROM ADNS 
 
 float negate; 
 float starting_pos; //will be set to either starting_pos_x or starting_pos_y
@@ -64,7 +64,18 @@ else {
   starting_pos = starting_pos_y; 
   }
     
-float pos = starting_pos + disp*negate;
+int pos = int(starting_pos + disp/30.0*negate);
+
+if (isX && pos > canvas_x) {
+  pos = canvas_x;
+}
+else if (!isX && pos > canvas_y) {
+  pos = canvas_y;
+}
+
+if (pos < 0) {
+  pos = 0;
+}
 
 if (isX) {
   starting_pos_x = pos;
@@ -73,7 +84,11 @@ else {
   starting_pos_y = pos; 
 }
 
+
 return pos;
 }
 
-
+/*float Motion::scaleReading(float reading) { // scales disp by some order of magnitude to fit on the screen (and depending on how sensitive we want motion to be) 
+  // reading: sensor reading to be scaled and modified
+  return reading/30;
+}*/

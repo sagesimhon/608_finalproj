@@ -12,8 +12,9 @@ class Motion
     float starting_pos_y;
     Motion(float width, float height);
     float vel_to_pos(float vel, bool isX);
-    float disp_to_pos(float disp, bool isX);
-      
+    int disp_to_pos(float disp, bool isX);
+    //float scaleReading(float reading) ;
+
 };
 
 #endif
