@@ -19,6 +19,8 @@ WiFiClient client;
 ////////////////////////// STATES ////////////////////////////////////
 
 // Currently our states cycle from INSTRUCTIONS --> DRAW --> INSTRUCTIONS
+#define CHOOSE_COLOR -3
+#define CHOOSE_IMG -2
 #define INSTRUCTIONS -1
 #define DRAW 0
 #define POST_DRAW_INSTRUCTIONS 3
@@ -26,21 +28,24 @@ WiFiClient client;
 #define DOWNLOAD 2
 
 //////////////////////// POST REQUESTS ////////////////////////////
-//String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
-String url_base = "/608dev/sandbox/jfusman/server.py";
+String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
+//String url_base = "/608dev/sandbox/jfusman/server.py";
 int idSeq = 0;
 String imageId = "img" + String(idSeq);     // ID if the current image we're drawing
 String kerberos = "dainkim";
 
 
 /////////////////// SAMPLING AND SAVING INFORMATION ////////////////
-int state = INSTRUCTIONS;
+int state = CHOOSE_COLOR;
 unsigned long lastSampleTime = millis();    // Used to determine whether its time to sample again
 int sampleFrequency = 100;                  // Take a position sample every 100 ms
 int globalCounter = 0;                      // This is used for testing purposes
 
 int pointsToSave = 50;                      // size of our ImageCoords
-Artist artist(pointsToSave, imageId, "red");
+String colors[5] = {"black", "red", "blue", "green", "yellow"}; // list of available colors
+int color_index = 0;
+String color = colors[color_index]; // default is black
+Artist artist(pointsToSave, imageId, color);
 int numSavedPoints = 0;                     // number of points that haven't been posted
 
 //////////////////////// BUTTONS //////////////////////////////////
@@ -60,6 +65,37 @@ Motion motionScaling(200.0, 200.0);
 
 void loop() {
   switch (state) {
+    // CHOOSE COLOR USING BUTTON2 (PIN 2)
+    case CHOOSE_COLOR:
+      print_instructions("Select Color: "+color);
+      if (lastB2 != b2.getState()) {
+        lastB2 = b2.getState();
+        color_index += 1;
+        color_index %= 5;
+        color = colors[color_index];
+      }
+      if (lastB1 != b1.getState()) {
+        lastB1 = b1.getState();
+        state = CHOOSE_IMG;
+      }
+      break;
+
+    // CHOOSE IMG NUMBER USING BUTTON2
+    case CHOOSE_IMG:
+      imageId = "img" + String(idSeq);    // Give this new image a new name
+      print_instructions("Select: "+imageId);
+      if (lastB2 != b2.getState()) {
+        lastB2 = b2.getState();
+        idSeq += 1;
+      }
+      artist.clearPoints();
+      artist.changeCurrentImage(imageId);
+      if (lastB1 != b1.getState()) {
+        lastB1 = b1.getState();
+        state = INSTRUCTIONS;
+      }
+      break;
+    
     // PRINT INSTRUCTIONS AND BE READY TO START DRAWING
     case INSTRUCTIONS:
       print_instructions("press b1 to draw then b1 again to stop");
@@ -68,11 +104,6 @@ void loop() {
       if (lastB1 != b1.getState()) {
         lastB1 = b1.getState();
         state = DRAW;
-
-        imageId = "img" + String(idSeq);    // Give this new image a new name
-        idSeq += 1;
-        artist.clearPoints();
-        artist.changeCurrentImage(imageId);
       }
       break;
 
@@ -142,8 +173,7 @@ void setup() {
   setup_imu();                           //imu
 
   // Setup wifi
-  //WiFi.begin("MIT",""); //attempt to connect to wifi
-  WiFi.begin("6s08", "iesc6s08");
+  WiFi.begin("MIT",""); //attempt to connect to wifi
   int count = 0; //count used for Wifi check times
   while (WiFi.status() != WL_CONNECTED && count < 6) {
     delay(500);
