@@ -19,19 +19,8 @@ def request_handler(request):
  
     """
 
-    ## UNCOMMENT THE BELOW TO SEE TWO STARS ON THE SERVER. ACCESS THE SERVER AT JUST PLAIN SANDBOX URL, NO PARMS
-    # # Hard coded coordinates to draw a star
-    # #entry_id = "star"
-    # x_coords = "60,20,110,10,100,60,"
-    # y_coords = "20,110,50,50,110,20,"
-    # color = "black";
-    # post("star", x_coords, y_coords, color)
-
-    # x_coords = "70,30,120,20,110,70,"
-    # y_coords = "30,120,60,60,120,30,"
-    # color = "red";
-    # post("star", x_coords, y_coords, color)
-
+    # # UNCOMMENT THE BELOW TO SEE TWO STARS ON THE SERVER. ACCESS THE SERVER AT JUST PLAIN SANDBOX URL, NO PARMS
+    # post_star()
     # return get_html("star")
 
     entry_id = "default"
@@ -52,6 +41,22 @@ def request_handler(request):
             pass
     
     return get_html(entry_id);
+
+def post_star():
+    """
+    Adds coordinates for two stars to the db, one black one red. Adds coordinates to image with id "star"
+    """
+    x_coords = "60,20,110,10,100,60,"
+    y_coords = "20,110,50,50,110,20,"
+    color = "black";
+    post("star", x_coords, y_coords, color)
+
+    x_coords = "70,30,120,20,110,70,"
+    y_coords = "30,120,60,60,120,30,"
+    color = "red";
+    post("star", x_coords, y_coords, color)
+
+
 
 def post(entry_id, x_coords, y_coords, color):
     """
@@ -87,11 +92,17 @@ def get_html(entry_id):
     #conn.row_factory = lambda cursor, row: row[0]
     c = conn.cursor()
 
-    rows = c.execute('''SELECT x_coords, y_coords, color from image WHERE id == ? ORDER BY t ASC''', (entry_id,)).fetchall();
+    point_and_color = []
+    try:
+        rows = c.execute('''SELECT x_coords, y_coords, color from image WHERE id == ? ORDER BY t ASC''', (entry_id,)).fetchall();
+        point_and_color = [list(coord) + [color] for x, y, color in rows for coord in zip(x[:-1].split(","), y[:-1].split(",")) ]
+    except:
+        entry_id = 'default'
     conn.close()
 
+
+
     # [ [x, y, color], [x, y, color], [x, y, color]...]
-    point_and_color = [list(coord) + [color] for x, y, color in rows for coord in zip(x[:-1].split(","), y[:-1].split(",")) ]
 
 
     # # [ 'x1,x2,x3,x4,', 'x5,x6,x7,x8,', ...] where x1 is the OLDEST pixel
@@ -161,7 +172,8 @@ def get_html(entry_id):
                         }
                         else{
                             ctx.font = "10px Arial";
-                            ctx.fillText("Bad GET request. Specify your image id",10,50);
+                            ctx.fillText("Uhoh. Either unspecified image id,",10,50);
+                            ctx.fillText("or no posts exist.", 10,60);
                         }
 
                     </script>
