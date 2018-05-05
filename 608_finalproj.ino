@@ -43,9 +43,8 @@ int globalCounter = 0;                      // This is used for testing purposes
 
 int pointsToSave = 50;                      // size of our ImageCoords
 String colors[5] = {"black", "red", "blue", "green", "yellow"}; // list of available colors
-int color_index = 0;
-String color = colors[color_index]; // default is black
-Artist artist(pointsToSave, imageId, color);
+int color_index = 0; // default is black
+Artist artist(pointsToSave, imageId, colors[color_index]);
 int numSavedPoints = 0;                     // number of points that haven't been posted
 
 //////////////////////// BUTTONS //////////////////////////////////
@@ -67,15 +66,14 @@ void loop() {
   switch (state) {
     // CHOOSE COLOR USING BUTTON2 (PIN 2)
     case CHOOSE_COLOR:
-      print_instructions("Select Color: "+color);
+      print_instructions("Select Color: "+colors[color_index]);
       if (lastB2 != b2.getState()) {
         lastB2 = b2.getState();
-        color_index += 1;
-        color_index %= 5;
-        color = colors[color_index];
+        color_index = (color_index+1)%5;
       }
       if (lastB1 != b1.getState()) {
         lastB1 = b1.getState();
+        artist.changeCurrentColor(colors[color_index]);
         state = CHOOSE_IMG;
       }
       break;
