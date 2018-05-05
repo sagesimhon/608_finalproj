@@ -156,7 +156,7 @@ void loop() {
       print_instructions("press b1 to finish");
       if (lastB1 != b1.getState()) {
         lastB1 = b1.getState();
-        state = INSTRUCTIONS;
+        state = CHOOSE_COLOR;
       }
       break;
   }
@@ -249,19 +249,19 @@ void setup_imu() {
   imu.getGres();
 }
 
-// NEW FUNCTION
-int modifyReading(float reading) {
-  // reading: float value of imu or sensor reading to be scaled and modified
-  float maxpossible = 0.5;//for now
-  if (reading < lowerbound) {
-    return lowerbound;
-  } else if (reading > maxpossible) {
-    return upperbound;
-  } else {
-    float scaled_reading = reading * upperbound / maxpossible;
-    return (int)scaled_reading;
-  }
-}
+//// NEW FUNCTION
+//int modifyReading(float reading) {
+//  // reading: float value of imu or sensor reading to be scaled and modified
+//  float maxpossible = 0.5;//for now
+//  if (reading < lowerbound) {
+//    return lowerbound;
+//  } else if (reading > maxpossible) {
+//    return upperbound;
+//  } else {
+//    float scaled_reading = reading * upperbound / maxpossible;
+//    return (int)scaled_reading;
+//  }
+//}
 
 void POST_request(String imageId, String x_coords, String y_coords, String color) {
   // kerberos: self-explanatory
