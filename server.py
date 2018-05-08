@@ -7,7 +7,7 @@ import sys
 
 
 images_db = '__HOME__/images.db'
-images_db = 'images.db'           # Use this path for local testing
+# images_db = 'images.db'           # Use this path for local testing
 
 def request_handler(request):
     """
@@ -240,25 +240,25 @@ def local_test(htmlstring):
     file.write(htmlstring) 
     file.close() 
 
-# Uncomment to run locally
-if __name__ == "__main__":
-    # To run from command line, input arguments either as:
-    # server.py post    imgId   xVal    yVal    color
-    # server.py get     imgID   xVal    yVal    color
-    # server.py delete  imgId   numEntries      color
-    # Then open the `server.html` file that should be in the same directory.
-    _, cmd, img_id = sys.argv[:3]
+# # Uncomment to run locally
+# if __name__ == "__main__":
+#     # To run from command line, input arguments either as:
+#     # server.py post    imgId   xVal    yVal    color
+#     # server.py get     imgID   xVal    yVal    color
+#     # server.py delete  imgId   numEntries      color
+#     # Then open the `server.html` file that should be in the same directory.
+#     _, cmd, img_id = sys.argv[:3]
   
-    request = {'values':{'image_id': img_id}, 'method':'GET'}
-    r = request['values']
+#     request = {'values':{'image_id': img_id}, 'method':'GET'}
+#     r = request['values']
 
-    if cmd == 'post':
-        x, y, color = sys.argv[3:]
-        r['x_coords'], r['y_coords'], r['color'] = sys.argv[3:]
-        request['method'] = "POST"
-    elif cmd == 'delete':
-        r['cmd'] = 'DELETE';
-        r['num_entries'], r['color'] = sys.argv[3:]
+#     if cmd == 'post':
+#         x, y, color = sys.argv[3:]
+#         r['x_coords'], r['y_coords'], r['color'] = sys.argv[3:]
+#         request['method'] = "POST"
+#     elif cmd == 'delete':
+#         r['cmd'] = 'DELETE';
+#         r['num_entries'], r['color'] = sys.argv[3:]
     
-    local_test(request_handler(request))
+#     local_test(request_handler(request))
 
