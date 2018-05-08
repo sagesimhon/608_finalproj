@@ -7,7 +7,7 @@ import sys
 
 
 images_db = '__HOME__/images.db'
-# images_db = 'images.db'           # Use this path for local testing
+images_db = 'images.db'           # Use this path for local testing
 
 def request_handler(request):
     """
@@ -40,6 +40,7 @@ def request_handler(request):
     elif request['method'] == 'POST':
         x_coords, y_coords, color = values['x_coords'], values['y_coords'], values['color']
         post(entry_id, x_coords, y_coords, color)
+        print("posted stuff")
     
     
     return get_html(entry_id)
@@ -119,7 +120,8 @@ def remove_coordinates(entry_id, num_entries, color=None):
     c = conn.cursor()
 
     try:
-        c.execute('''DELETE FROM image WHERE rowid IN (SELECT rowid from image where id==? AND color==? ORDER BY t DESC LIMIT ?);''', (entry_id, color, num_entries,));
+        c.execute('''DELETE FROM image WHERE rowid IN (SELECT rowid from image where id==? AND color==? ORDER BY t DESC LIMIT ?);''', (entry_id, color, num_entries,)) if color else \
+        c.execute('''DELETE FROM image WHERE rowid in (SELECT rowid from iamge where id == ? ORDER BY t DESC LIMIT ?);''', (entry_id, num_entries,));
         conn.commit()
         conn.close()
     except:
@@ -130,10 +132,12 @@ def remove_coordinates(entry_id, num_entries, color=None):
 
 
 
-def get_html(entry_id):
+def get_html(entry_id, width=800, height=600):
     """
     returns html that displays the image specified by `entry_id`
     entry_id    :    a string that represents the ID of the image.
+    width       :    optional width of canvas. integer specifying num pixels
+    height      :    optional height of canvas. ^^
     """
 
     conn = sqlite3.connect(images_db)
@@ -188,7 +192,7 @@ def get_html(entry_id):
 
                 <body>
 
-                    <canvas id="myCanvas" width="200" height="200"
+                    <canvas id="myCanvas" width="''' + str(width) + '''" height=" ''' + str(height) + '''"
                                             style="border:1px solid #d3d3d3;">
                                             Your browser does not support the HTML5 canvas tag.
                     </canvas>
@@ -237,24 +241,24 @@ def local_test(htmlstring):
     file.close() 
 
 # Uncomment to run locally
-# if __name__ == "__main__":
-#     # To run from command line, input arguments either as:
-#     # server.py post    imgId   xVal    yVal    color
-#     # server.py get     imgID   xVal    yVal    color
-#     # server.py delete  imgId   numEntries      color
-#     # Then open the `server.html` file that should be in the same directory.
-#     _, cmd, img_id = sys.argv[:3]
+if __name__ == "__main__":
+    # To run from command line, input arguments either as:
+    # server.py post    imgId   xVal    yVal    color
+    # server.py get     imgID   xVal    yVal    color
+    # server.py delete  imgId   numEntries      color
+    # Then open the `server.html` file that should be in the same directory.
+    _, cmd, img_id = sys.argv[:3]
   
-#     request = {'values':{'image_id': img_id}, 'method':'GET'}
-#     r = request['values']
+    request = {'values':{'image_id': img_id}, 'method':'GET'}
+    r = request['values']
 
-#     if cmd == 'post':
-#         x, y, color = sys.argv[3:]
-#         r['x_coords'], r['y_coords'], r['color'] = sys.argv[3:]
-#         request['method'] = "POST"
-#     elif cmd == 'delete':
-#         r['cmd'] = 'DELETE';
-#         r['num_entries'], r['color'] = sys.argv[3:]
+    if cmd == 'post':
+        x, y, color = sys.argv[3:]
+        r['x_coords'], r['y_coords'], r['color'] = sys.argv[3:]
+        request['method'] = "POST"
+    elif cmd == 'delete':
+        r['cmd'] = 'DELETE';
+        r['num_entries'], r['color'] = sys.argv[3:]
     
-#     local_test(request_handler(request))
+    local_test(request_handler(request))
 
