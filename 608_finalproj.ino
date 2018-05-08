@@ -86,9 +86,9 @@ void loop() {
         lastB2 = b2.getState();
         idSeq += 1;
       }
-      artist.clearPoints();
-      artist.changeCurrentImage(imageId);
       if (lastB1 != b1.getState()) {
+        artist.clearPoints();
+        artist.changeCurrentImage(imageId);
         lastB1 = b1.getState();
         state = INSTRUCTIONS;
       }
