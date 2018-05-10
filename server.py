@@ -23,7 +23,7 @@ def request_handler(request):
     FOR DELETING, I NEED
     'entry_id'      :
     'color'         : OPTIONAL
-    'num_entries'   : Number of rows to delete from db
+    'time_frame'    : time in seconds. will delete all entries newer than now - time_frame seconds ago.
  
     """
 
@@ -123,7 +123,7 @@ def post(entry_id, x_coords, y_coords, color):
 def remove_entries(entry_id, num_entries, color=None):
     """
     REMOVES ENTIRE ENTRIES BASED ON NUM_ENTRIES
-    
+
     entry_id    :   String with the value equal to the ID of the image to remove coordinates for
     num_entries :   Integer denoting the number of full-entries to remove. The total number of coordinate removed depends on 
                     how many were stored at every PUSH request
@@ -234,6 +234,7 @@ def get_html(entry_id, width=800, height=600):
                 <html lang="en">
                 <head>
                   <meta charset="utf-8">
+                  <meta http-equiv="refresh" content="5" >
                   <title>data demo</title>
                 </head>
 
