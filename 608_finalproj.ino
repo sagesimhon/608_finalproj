@@ -38,7 +38,7 @@ String kerberos = "dainkim";
 /////////////////// SAMPLING AND SAVING INFORMATION ////////////////
 int state = CHOOSE_COLOR;
 unsigned long lastSampleTime = millis();    // Used to determine whether its time to sample again
-int sampleFrequency = 100;                  // Take a position sample every 100 ms
+int sampleFrequency = 20;                  // Take a position sample every 20 ms
 int globalCounter = 0;                      // This is used for testing purposes
 
 int pointsToSave = 50;                      // size of our ImageCoords
@@ -55,12 +55,19 @@ int lastB2 = b2.getState();
 
 
 //////////////////////// CANVAS DIMENSIONS ////////////////////////
-const int upperbound = 200; // currently, this indicates both width and height of canvas
+const int upperbound = 800; // currently, this indicates both width and height of canvas
 const int lowerbound = 0;
 
 /////////Creating instances of classes//////
 motionValues mv;
 Motion motionScaling(200.0, 200.0);
+
+//////////////////////// SHAKE TO RESET FXN //////////////////////
+float acc_threshold = 0.4;
+float time_threshold = 400;
+unsigned long shake_checkpoint = millis();
+int shake_count = 0;
+int shake_state = 0;
 
 void loop() {
   switch (state) {
@@ -112,26 +119,40 @@ void loop() {
         lastSampleTime = millis();
         numSavedPoints += 1;
 
-        // sample from sensor
-        /*imu.readAccelData(imu.accelCount);
-          // scale points before adding to image
-          float x = imu.accelCount[0]*imu.aRes;
-          float y = imu.accelCount[1]*imu.aRes;
-        */
-        delay(50);
-        float x = mv.motionVals_x();
-        delay(50);
-        float y = mv.motionVals_y();
-        //artist.addToImage(modifyReading(x), modifyReading(y));
-        artist.addToImage(motionScaling.disp_to_pos(x, true), (motionScaling.disp_to_pos(y, false)));
+        // sample from sensor for shake_to_reset
+        imu.readAccelData(imu.accelCount);
+        float x = imu.accelCount[0]*imu.aRes;
+        float y = imu.accelCount[1]*imu.aRes;
+        float avg = (x+y)/2;
+//        Serial.println(avg);
+        if (shake_state >= 6) {
+          shake_state = 0;
+          Serial.println("This is when the delete request should happen");
+          DELETE_request(artist.getCurrentImage(), "1000", artist.getCurrentColor());
+          print_instructions("RESET");
+          delay(3000);
+          state = INSTRUCTIONS;
+        } else if ((shake_state%2==1 && avg < -acc_threshold) || (shake_state%2==0 && avg > acc_threshold)) {
+          shake_checkpoint = millis();
+          shake_state ++;
+        } else if (millis()-shake_checkpoint > time_threshold) {
+          shake_state = 0;
+        }
+
+//        delay(50);
+//        float x = mv.motionVals_x();
+//        delay(50);
+//        float y = mv.motionVals_y();
+        artist.addToImage(modifyReading(x), modifyReading(y));
+//        artist.addToImage(motionScaling.disp_to_pos(x, true), (motionScaling.disp_to_pos(y, false)));
         globalCounter++;
       }
 
       // ImageCoords is full, time to post.
       if (numSavedPoints == pointsToSave) {
-        Serial.println("-------posting now:");
-        Serial.println(artist.getMostRecentPoints(numSavedPoints, true));
-        Serial.println(artist.getMostRecentPoints(numSavedPoints, false));
+//        Serial.println("-------posting now:");
+//        Serial.println(artist.getMostRecentPoints(numSavedPoints, true));
+//        Serial.println(artist.getMostRecentPoints(numSavedPoints, false));
         POST_request(artist.getCurrentImage(), artist.getMostRecentPoints(numSavedPoints, true), artist.getMostRecentPoints(numSavedPoints, false), artist.getCurrentColor());//img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false), kerberos);
         numSavedPoints = 0;
       }
@@ -175,17 +196,17 @@ void setup() {
   int count = 0; //count used for Wifi check times
   while (WiFi.status() != WL_CONNECTED && count < 6) {
     delay(500);
-    Serial.print(".");
+//    Serial.print(".");
     count++;
   }
   delay(2000);
   if (WiFi.isConnected()) { //if we connected then print our IP, Mac, and SSID we're on
-    Serial.println(WiFi.localIP().toString() + " (" + WiFi.macAddress() + ") (" + WiFi.SSID() + ")");
+//    Serial.println(WiFi.localIP().toString() + " (" + WiFi.macAddress() + ") (" + WiFi.SSID() + ")");
     print_instructions("All Connected");
     // Initialize data and weather getters
     delay(500);
   } else { //if we failed to connect just ry again.
-    Serial.println(WiFi.status());
+//    Serial.println(WiFi.status());
     ESP.restart(); // restart the ESP
   }
   print_instructions("Press button to start");
@@ -247,25 +268,42 @@ void setup_imu() {
   imu.getGres();
 }
 
-//// NEW FUNCTION
-//int modifyReading(float reading) {
-//  // reading: float value of imu or sensor reading to be scaled and modified
-//  float maxpossible = 0.5;//for now
-//  if (reading < lowerbound) {
-//    return lowerbound;
-//  } else if (reading > maxpossible) {
-//    return upperbound;
-//  } else {
-//    float scaled_reading = reading * upperbound / maxpossible;
-//    return (int)scaled_reading;
-//  }
-//}
+// NEW FUNCTION
+int modifyReading(float reading) {
+  // reading: float value of imu or sensor reading to be scaled and modified
+  float maxpossible = 0.5;//for now
+  if (reading < lowerbound) {
+    return lowerbound;
+  } else if (reading > maxpossible) {
+    return upperbound;
+  } else {
+    float scaled_reading = reading * upperbound / maxpossible;
+    return (int)scaled_reading;
+  }
+}
+
+void DELETE_request(String imageId, String num_entries, String color) {
+  if (client.connect("iesc-s1.mit.edu", 80)) {
+    String data = "cmd=DELETE&image_id=" + imageId + "&num_entries=" + num_entries + "&color=" + color;
+    client.println("POST " + url_base + " HTTP/1.1");
+    client.println("Host: iesc-s1.mit.edu");
+    client.println("Content-Type: application/x-www-form-urlencoded");
+    client.println("Content-Length: " + String(data.length()));
+    client.print("\r\n");
+    client.print(data);
+
+    client.stop();
+  } else {
+    delay(300);
+    DELETE_request(imageId, num_entries, color);
+  }
+}
 
 void POST_request(String imageId, String x_coords, String y_coords, String color) {
   // kerberos: self-explanatory
   // x_coords: string of x-coordinates to be POSTed, formatted by ImageCoords.get1DCoords
   // y_coords: string of y-coordinates to be posted
-  Serial.println("inside POST_request");
+//  Serial.println("inside POST_request");
   if (client.connect("iesc-s1.mit.edu", 80)) {
     String data = "image_id=" + imageId + "&x_coords=" + x_coords + "&y_coords=" + y_coords + "&color=" + color;
     client.println("POST " + url_base + " HTTP/1.1");
