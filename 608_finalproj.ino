@@ -27,6 +27,7 @@ ADP5350 adp;
 #define POST_DRAW_INSTRUCTIONS 3
 #define UPLOAD 1
 #define DOWNLOAD 2
+#define POWER_SAVE -4
 
 //////////////////////// POST REQUESTS ////////////////////////////
 //String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
@@ -70,33 +71,57 @@ unsigned long shake_checkpoint = millis();
 int shake_count = 0;
 int shake_state = 0;
 
+unsigned long powerTimer = millis();
+unsigned long powerTimer1 = millis();
+unsigned long powerTimer2 = millis();
+unsigned long powerTimer3 = millis();
+
 void loop() {
   switch (state) {
     // CHOOSE COLOR USING BUTTON2 (PIN 2)
     case CHOOSE_COLOR:
       print_instructions("Select Color: " + colors[color_index]);
+      if (millis() - powerTimer >= 30000) {
+        oled.setPowerSave(1);
+        state = POWER_SAVE;
+      }
       if (lastB2 != b2.getState()) {
         lastB2 = b2.getState();
+        powerTimer = millis();
         color_index = (color_index + 1) % 5;
       }
       if (lastB1 != b1.getState()) {
         lastB1 = b1.getState();
         artist.changeCurrentColor(colors[color_index]);
+        powerTimer2 = millis();
         state = CHOOSE_IMG;
       }
       break;
-
+    case POWER_SAVE:
+      if (lastB1 != b1.getState()) {
+        lastB1 = b1.getState();
+        oled.begin();
+        powerTimer = millis();
+        state = CHOOSE_COLOR;
+      }
+      break;
     // CHOOSE IMG NUMBER USING BUTTON2
     case CHOOSE_IMG:
       imageId = "img" + String(idSeq);    // Give this new image a new name
       print_instructions("Select: " + imageId);
       if (lastB2 != b2.getState()) {
         lastB2 = b2.getState();
+        powerTimer2 = millis();
         idSeq += 1;
       }
+      if (millis() - powerTimer2 >= 30000) {
+        oled.setPowerSave(1);
+        state = POWER_SAVE;
+      }
+      artist.clearPoints();
+      artist.changeCurrentImage(imageId);
       if (lastB1 != b1.getState()) {
-        artist.clearPoints();
-        artist.changeCurrentImage(imageId);
+
         lastB1 = b1.getState();
         state = INSTRUCTIONS;
       }
@@ -109,13 +134,18 @@ void loop() {
       // Button was pressed. Change states
       if (lastB1 != b1.getState()) {
         lastB1 = b1.getState();
+        powerTimer1 = millis();
         state = DRAW;
+
       }
       break;
 
     // CONTINUOUSLY SAMPLE INPUTS FROM SENSOR AND POST TO SERVER
     case DRAW:
       print_instructions("I'm drawing on '" + imageId + "'. press b again to stop");
+      if (millis() - powerTimer1 >= 2000) {
+        oled.setPowerSave(1);
+      }
       if (millis() - lastSampleTime >= sampleFrequency) {
         lastSampleTime = millis();
         numSavedPoints += 1;
@@ -139,13 +169,13 @@ void loop() {
         } else if (millis() - shake_checkpoint > time_threshold) {
           shake_state = 0;
         }
-
+        //mv.motion_setup();
         delay(20);
         float x = mv.motionVals_x();
         delay(20);
         float y = mv.motionVals_y();
         //artist.addToImage(modifyReading(x), modifyReading(y));
-              artist.addToImage(motionScaling.disp_to_pos(x, true), (motionScaling.disp_to_pos(y, false)));
+        artist.addToImage(motionScaling.disp_to_pos(x, true), (motionScaling.disp_to_pos(y, false)));
         globalCounter++;
       }
 
@@ -164,7 +194,7 @@ void loop() {
         POST_request(artist.getCurrentImage(), artist.getMostRecentPoints(numSavedPoints, true), artist.getMostRecentPoints(numSavedPoints, false), artist.getCurrentColor());//img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false), kerberos);
         artist.clearPoints();
         numSavedPoints = 0;
-
+        oled.begin();
         lastB1 = b1.getState();
         state = POST_DRAW_INSTRUCTIONS;
       }
@@ -176,6 +206,7 @@ void loop() {
       print_instructions("press b1 to finish");
       if (lastB1 != b1.getState()) {
         lastB1 = b1.getState();
+        powerTimer = millis();
         state = CHOOSE_COLOR;
       }
       break;
@@ -213,7 +244,7 @@ void setup() {
   }
   print_instructions("Press button to start");
   mv.motion_setup();
-    //ADP5350-specific setup
+  //ADP5350-specific setup
   adp.setCharger(1); //Turn on charger
   adp.enableFuelGauge(1); //turn on fuel gauge (and battery readout functionality)
   adp.enableLDO(1, 1); //Turn on LDO1
