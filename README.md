@@ -34,6 +34,15 @@ VI- 3v3
    so that everyone else knows to pull.
 
 ### UPDATES
+5/10/18
+1. Added "shake to reset" functionality to .ino
+how it works:
+- need to shake at least three times (both ways) to register as a reset.
+- you can see the exact threshold numbers on the script, defined under label /// SHAKE TO RESET FXN ///
+- it sends a `DELETE_request` (new function defined at the bottom) with inputs `image_Id`, `num_entries`, and `color`
+- at the moment, `num_entries` is hardcoded to 1000 (delete 1000 most recent entries) but subject to change
+- after deleting, the oled displays "RESET" for three seconds and returns to the "INSTRUCTIONS" state
+
 
 5/4/18
 1.integrated the sensor into the 608_finalproj.ino
