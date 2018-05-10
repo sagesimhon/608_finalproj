@@ -3,11 +3,13 @@ import json
 import datetime
 import math
 import sys
+import time
 
 
 
 images_db = '__HOME__/images.db'
 # images_db = 'images.db'           # Use this path for local testing
+
 
 def request_handler(request):
     """
@@ -21,7 +23,7 @@ def request_handler(request):
     FOR DELETING, I NEED
     'entry_id'      :
     'color'         : OPTIONAL
-    'num_entries'   : Number of rows to delete from db
+    'time_frame'    : time in seconds. will delete all entries newer than now - time_frame seconds ago.
  
     """
 
@@ -35,7 +37,7 @@ def request_handler(request):
 
     if 'cmd' in values:
         print("removed stuff")
-        remove_coordinates(entry_id, values['num_entries'], values.get('color', 'black'))
+        remove_newer_entries(entry_id, values['time_frame'], values.get('color', None))
 
     elif request['method'] == 'POST':
         x_coords, y_coords, color = values['x_coords'], values['y_coords'], values['color']
@@ -46,7 +48,7 @@ def request_handler(request):
     return get_html(entry_id)
 
 
-# Purpose of this function is just for testing
+# # Purpose of this function is just for testing
 # def run_insert_and_delete():
 #     entry_id, x_coords, y_coords, color = "runInsertAndDelete1", "10,20,", "10,20," , "black"
 
@@ -60,25 +62,39 @@ def request_handler(request):
 #     post(entry_id, x_coords, y_coords, color)
 
 #     # delete 1 row    
-#     remove_coordinates(entry_id, 1, color)
+#     remove_entries(entry_id, 1, color)
 #     return get_html(entry_id)
 
+# def post_star():
+#     """
+#     Adds coordinates for two stars to the db, one black one red. Adds coordinates to image with id "star"
+#     """
+#     x_coords = "60,20,110,10,100,60,"
+#     y_coords = "20,110,50,50,110,20,"
+#     color = "black";
+#     post("star", x_coords, y_coords, color)
 
+#     x_coords = "70,30,120,20,110,70,"
+#     y_coords = "30,120,60,60,120,30,"
+#     color = "red";
+#     post("star", x_coords, y_coords, color)
 
-def post_star():
-    """
-    Adds coordinates for two stars to the db, one black one red. Adds coordinates to image with id "star"
-    """
-    x_coords = "60,20,110,10,100,60,"
-    y_coords = "20,110,50,50,110,20,"
-    color = "black";
-    post("star", x_coords, y_coords, color)
+# def run_insert_delete_time_no_color():
+#     entry_id, x_coords, y_coords, color = "runinsertdeletetime", "should stay", "should stay", "black"
 
-    x_coords = "70,30,120,20,110,70,"
-    y_coords = "30,120,60,60,120,30,"
-    color = "red";
-    post("star", x_coords, y_coords, color)
+#     # Post one row. this row should stay
+#     post(entry_id, x_coords, y_coords, color)
 
+#     # Sleep for one second
+#     time.sleep(2)
+
+#     # Post another two rows. Both should be deleted
+#     post(entry_id, "should delete", "should delete", color)
+#     post(entry_id, "should delete 2", "should delete 2", color)
+
+#     print(remove_newer_entries(entry_id, 1))
+#     local_test(get_html(entry_id))
+#     return get_html(entry_id)
 
 
 def post(entry_id, x_coords, y_coords, color):
@@ -104,8 +120,10 @@ def post(entry_id, x_coords, y_coords, color):
     conn.commit();
     conn.close();
 
-def remove_coordinates(entry_id, num_entries, color=None):
+def remove_entries(entry_id, num_entries, color=None):
     """
+    REMOVES ENTIRE ENTRIES BASED ON NUM_ENTRIES
+
     entry_id    :   String with the value equal to the ID of the image to remove coordinates for
     num_entries :   Integer denoting the number of full-entries to remove. The total number of coordinate removed depends on 
                     how many were stored at every PUSH request
@@ -130,6 +148,35 @@ def remove_coordinates(entry_id, num_entries, color=None):
 
     return "deleted"
 
+def remove_newer_entries(entry_id, erase_time, color=None):
+    """
+    REMOVES ENTRIES BASED ON TIME
+
+    entry_id    :      id of the image to erase some
+    erase_time  :      integer time in seconds. Will erase entries from 
+                       [now - erase_time, now]
+    color       :      If provided, will erase only recent values of points with this color.
+                       Otherwise, will remove recent values of any / all colors.
+    """
+
+
+    # will delete all values newer than this time, inclusive
+    start_time = datetime.datetime.now() - datetime.timedelta(seconds=erase_time)
+    command, args = ('''DELETE FROM image where id==? AND t>=? AND color==?;''', (entry_id, start_time,color,),) if color else \
+                    ('''DELETE from image where id==? AND t>=?;''',              (entry_id, start_time,),)
+
+    conn = sqlite3.connect(images_db)
+    c = conn.cursor()
+
+    try:
+        c.execute(command, args)
+        conn.commit()
+        c.close()
+
+    except:
+        c.close()
+        return "database couldn't execute"
+    return "removed stuff based on time"
 
 
 def get_html(entry_id, width=800, height=600):
@@ -187,6 +234,7 @@ def get_html(entry_id, width=800, height=600):
                 <html lang="en">
                 <head>
                   <meta charset="utf-8">
+                  <meta http-equiv="refresh" content="5" >
                   <title>data demo</title>
                 </head>
 
@@ -234,14 +282,12 @@ def get_html(entry_id, width=800, height=600):
                 </html>
             '''
 
-
 def local_test(htmlstring):
     file = open("server.html","w")
     file.write(htmlstring) 
     file.close() 
 
-# # Uncomment to run locally
-# if __name__ == "__main__":
+# def simulate_request_handler():
 #     # To run from command line, input arguments either as:
 #     # server.py post    imgId   xVal    yVal    color
 #     # server.py get     imgID   xVal    yVal    color
@@ -258,7 +304,13 @@ def local_test(htmlstring):
 #         request['method'] = "POST"
 #     elif cmd == 'delete':
 #         r['cmd'] = 'DELETE';
-#         r['num_entries'], r['color'] = sys.argv[3:]
+#         r['time_frame'], r['color'] = sys.argv[3:]
     
 #     local_test(request_handler(request))
+
+
+# # Uncomment to run locally
+# if __name__ == "__main__":
+#    simulate_request_handler()
+    
 
