@@ -8,13 +8,14 @@
 #include "Artist.h"
 #include "motionValues.h"
 #include "Motion.h"
-
+#include <adp5350.h>
 
 //change
 const int response_timeout = 6000; //ms to wait for response from host
 U8G2_SH1106_128X64_NONAME_F_4W_HW_SPI oled(U8G2_R0, 5, 17, 16);
 MPU9255 imu;
 WiFiClient client;
+ADP5350 adp;
 
 ////////////////////////// STATES ////////////////////////////////////
 
@@ -28,8 +29,8 @@ WiFiClient client;
 #define DOWNLOAD 2
 
 //////////////////////// POST REQUESTS ////////////////////////////
-String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
-//String url_base = "/608dev/sandbox/jfusman/server.py";
+//String url_base = "/608dev/sandbox/dainkim/finalproj/server.py"; //CHANGE FOR YOUR OWN URL
+String url_base = "/608dev/sandbox/jfusman/server.py";
 int idSeq = 0;
 String imageId = "img" + String(idSeq);     // ID if the current image we're drawing
 String kerberos = "dainkim";
@@ -60,7 +61,7 @@ const int lowerbound = 0;
 
 /////////Creating instances of classes//////
 motionValues mv;
-Motion motionScaling(200.0, 200.0);
+Motion motionScaling(800, 600.0);
 
 //////////////////////// SHAKE TO RESET FXN //////////////////////
 float acc_threshold = 0.4;
@@ -73,10 +74,10 @@ void loop() {
   switch (state) {
     // CHOOSE COLOR USING BUTTON2 (PIN 2)
     case CHOOSE_COLOR:
-      print_instructions("Select Color: "+colors[color_index]);
+      print_instructions("Select Color: " + colors[color_index]);
       if (lastB2 != b2.getState()) {
         lastB2 = b2.getState();
-        color_index = (color_index+1)%5;
+        color_index = (color_index + 1) % 5;
       }
       if (lastB1 != b1.getState()) {
         lastB1 = b1.getState();
@@ -88,7 +89,7 @@ void loop() {
     // CHOOSE IMG NUMBER USING BUTTON2
     case CHOOSE_IMG:
       imageId = "img" + String(idSeq);    // Give this new image a new name
-      print_instructions("Select: "+imageId);
+      print_instructions("Select: " + imageId);
       if (lastB2 != b2.getState()) {
         lastB2 = b2.getState();
         idSeq += 1;
@@ -100,7 +101,7 @@ void loop() {
         state = INSTRUCTIONS;
       }
       break;
-    
+
     // PRINT INSTRUCTIONS AND BE READY TO START DRAWING
     case INSTRUCTIONS:
       print_instructions("press b1 to draw then b1 again to stop");
@@ -121,10 +122,10 @@ void loop() {
 
         // sample from sensor for shake_to_reset
         imu.readAccelData(imu.accelCount);
-        float x = imu.accelCount[0]*imu.aRes;
-        float y = imu.accelCount[1]*imu.aRes;
-        float avg = (x+y)/2;
-//        Serial.println(avg);
+        float u = imu.accelCount[0] * imu.aRes;
+        float v = imu.accelCount[1] * imu.aRes;
+        float avg = (u + v) / 2;
+        //        Serial.println(avg);
         if (shake_state >= 6) {
           shake_state = 0;
           Serial.println("This is when the delete request should happen");
@@ -132,27 +133,27 @@ void loop() {
           print_instructions("RESET");
           delay(3000);
           state = INSTRUCTIONS;
-        } else if ((shake_state%2==1 && avg < -acc_threshold) || (shake_state%2==0 && avg > acc_threshold)) {
+        } else if ((shake_state % 2 == 1 && avg < -acc_threshold) || (shake_state % 2 == 0 && avg > acc_threshold)) {
           shake_checkpoint = millis();
           shake_state ++;
-        } else if (millis()-shake_checkpoint > time_threshold) {
+        } else if (millis() - shake_checkpoint > time_threshold) {
           shake_state = 0;
         }
 
-//        delay(50);
-//        float x = mv.motionVals_x();
-//        delay(50);
-//        float y = mv.motionVals_y();
-        artist.addToImage(modifyReading(x), modifyReading(y));
-//        artist.addToImage(motionScaling.disp_to_pos(x, true), (motionScaling.disp_to_pos(y, false)));
+        delay(20);
+        float x = mv.motionVals_x();
+        delay(20);
+        float y = mv.motionVals_y();
+        //artist.addToImage(modifyReading(x), modifyReading(y));
+              artist.addToImage(motionScaling.disp_to_pos(x, true), (motionScaling.disp_to_pos(y, false)));
         globalCounter++;
       }
 
       // ImageCoords is full, time to post.
       if (numSavedPoints == pointsToSave) {
-//        Serial.println("-------posting now:");
-//        Serial.println(artist.getMostRecentPoints(numSavedPoints, true));
-//        Serial.println(artist.getMostRecentPoints(numSavedPoints, false));
+        //        Serial.println("-------posting now:");
+        //        Serial.println(artist.getMostRecentPoints(numSavedPoints, true));
+        //        Serial.println(artist.getMostRecentPoints(numSavedPoints, false));
         POST_request(artist.getCurrentImage(), artist.getMostRecentPoints(numSavedPoints, true), artist.getMostRecentPoints(numSavedPoints, false), artist.getCurrentColor());//img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false), kerberos);
         numSavedPoints = 0;
       }
@@ -192,25 +193,31 @@ void setup() {
   setup_imu();                           //imu
 
   // Setup wifi
-  WiFi.begin("MIT",""); //attempt to connect to wifi
+  //WiFi.begin("MIT",""); //attempt to connect to wifi
+  WiFi.begin("6s08", "iesc6s08");
   int count = 0; //count used for Wifi check times
   while (WiFi.status() != WL_CONNECTED && count < 6) {
     delay(500);
-//    Serial.print(".");
+    //    Serial.print(".");
     count++;
   }
   delay(2000);
   if (WiFi.isConnected()) { //if we connected then print our IP, Mac, and SSID we're on
-//    Serial.println(WiFi.localIP().toString() + " (" + WiFi.macAddress() + ") (" + WiFi.SSID() + ")");
+    //    Serial.println(WiFi.localIP().toString() + " (" + WiFi.macAddress() + ") (" + WiFi.SSID() + ")");
     print_instructions("All Connected");
     // Initialize data and weather getters
     delay(500);
   } else { //if we failed to connect just ry again.
-//    Serial.println(WiFi.status());
+    //    Serial.println(WiFi.status());
     ESP.restart(); // restart the ESP
   }
   print_instructions("Press button to start");
   mv.motion_setup();
+    //ADP5350-specific setup
+  adp.setCharger(1); //Turn on charger
+  adp.enableFuelGauge(1); //turn on fuel gauge (and battery readout functionality)
+  adp.enableLDO(1, 1); //Turn on LDO1
+  adp.enableLDO(2, 1); //Turn on LDO2
 }
 
 
@@ -303,7 +310,7 @@ void POST_request(String imageId, String x_coords, String y_coords, String color
   // kerberos: self-explanatory
   // x_coords: string of x-coordinates to be POSTed, formatted by ImageCoords.get1DCoords
   // y_coords: string of y-coordinates to be posted
-//  Serial.println("inside POST_request");
+  //  Serial.println("inside POST_request");
   if (client.connect("iesc-s1.mit.edu", 80)) {
     String data = "image_id=" + imageId + "&x_coords=" + x_coords + "&y_coords=" + y_coords + "&color=" + color;
     client.println("POST " + url_base + " HTTP/1.1");
