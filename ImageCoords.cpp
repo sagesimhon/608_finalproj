@@ -2,6 +2,8 @@
 #include "ImageCoords.h"
 
 ImageCoords::ImageCoords(int capacity){
+  delete _xCoords;
+  delete _yCoords;
   _xCoords = new float[capacity];
   _yCoords = new float[capacity];
 
@@ -34,6 +36,8 @@ int ImageCoords::mod(int a, int b){
 }
 
 void ImageCoords::resetImage(){
+  delete _xCoords;
+  delete _yCoords;
   _xCoords = new float[_capacity];
   _yCoords = new float[_capacity];
   _oldestIndex = 0;
