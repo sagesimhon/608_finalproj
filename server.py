@@ -37,7 +37,7 @@ def request_handler(request):
 
     if 'cmd' in values:
         print("removed stuff")
-        remove_newer_entries(entry_id, values['time_frame'], values.get('color', None))
+        remove_entries(entry_id, values['num_entries'], values.get('color', None))
 
     elif request['method'] == 'POST':
         x_coords, y_coords, color = values['x_coords'], values['y_coords'], values['color']
