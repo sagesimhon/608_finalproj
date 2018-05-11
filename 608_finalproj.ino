@@ -71,12 +71,43 @@ Motion motionScaling(800, 600.0);
 //int shake_count = 0;
 //int shake_state = 0;
 
+//////////////// POWER CALCULATIONS ////////////////
+//Power Variables
+int power_state; //state of power state machine (0:
+float discharge_amt;
+float old_discharge_amt; //previous discharge amount (used for calculating rate)
+float discharge_rate; //estimated discharge rate
+float time_remaining; //amount of time remaining until battery discharged
+const int check_period = 100; //iterations between updating discharge_rate
+int check_counter;
+int voltage_1 = 0;
+int voltage_2 = 0;
+int voltage_3 = 0;
+int voltage_4 = 0;
+unsigned long last_check = millis();
+
+
 unsigned long powerTimer = millis();
 unsigned long powerTimer1 = millis();
 unsigned long powerTimer2 = millis();
 unsigned long powerTimer3 = millis();
 
 void loop() {
+
+  if (millis()-last_check >= 2000) {
+    int voltage = adp.batteryVoltage(); // get Battery Voltage (mV)
+    float avg_voltage = (voltage+voltage_1+voltage_2+voltage_3+voltage_4)/5;
+    discharge_amt = discharge_from_voltage(0.001 * avg_voltage, 0.001); //get discharge amount using battery voltage
+    discharge_rate = max(discharge_amt - old_discharge_amt, 0.0) / 2000;
+    time_remaining = (1 - discharge_amt) / discharge_rate * 0.1;
+    old_discharge_amt = discharge_amt;
+    voltage_4 = voltage_3;
+    voltage_3 = voltage_2;
+    voltage_2 = voltage_1;
+    voltage_1 = voltage;
+    last_check = millis();
+  }
+//  print_instructions(String(discharge_amt));
   switch (state) {
     // CHOOSE COLOR USING BUTTON2 (PIN 2)
     case CHOOSE_COLOR:
@@ -261,6 +292,16 @@ void setup() {
   adp.enableFuelGauge(1); //turn on fuel gauge (and battery readout functionality)
   adp.enableLDO(1, 1); //Turn on LDO1
   adp.enableLDO(2, 1); //Turn on LDO2
+  adp.voltageLDO3(13); //Set LDO3 to be 3.3V value
+  adp.enableLDO(3, 1); //Enable LDO3
+
+  //initialize power variables:
+  power_state = 0;
+  discharge_rate = 0.00001; //initialize dummy
+  time_remaining = 1000; //initialize dummy value
+  int voltage = adp.batteryVoltage(); // Battery Voltage (mV)
+  old_discharge_amt = discharge_from_voltage(0.001 * voltage, 0.001);
+  check_counter = 0;
 }
 
 
@@ -305,8 +346,95 @@ void pretty_print(int startx, int starty, String input, int fwidth, int fheight,
       oled.print(temp);
     }
   }
+  drawBattery(104, 53, 1.0 - discharge_amt);
   oled.sendBuffer();
 }
+
+////////
+
+//Button Variables:
+const int input_pin = 15; //the button's pin
+int old_input; //used to remember previous button value (for edge detection)
+int button_count; //for counting pushes (cycles through three power states)
+
+//Loop Timing Variables:
+const int loop_period = 100; //(ms)..how quickly primary loop iterates
+unsigned long timer; //used for timing loop
+
+
+//max function (returns larger of two)
+float max(float x, float y) {
+  return x > y ? x : y;
+}
+
+
+////updates power_state machine
+//void power_state_update() {
+//  int input = digitalRead(input_pin);
+//  if (input != old_input && !input) {
+//    power_state ++; //increment power state on button push
+//    power_state %= 3; //cycle through three power states
+//    if (power_state == 0) { //turn on WiFi, LED, and GPS!
+//      WiFi.begin("6s08", "iesc6s08");
+//      WiFi.mode(WIFI_STA);
+//      adp.enableLDO(3, 1);
+//    } else if (power_state == 1) { //Turn off WiFi, have only LED, GPS on
+//      //WiFi.mode(WIFI_OFF);
+//      WiFi.mode(WIFI_MODE_NULL);
+//    } else {
+//      adp.enableLDO(3, 0); //Turn off everything!!
+//      WiFi.mode(WIFI_MODE_NULL);
+//    }
+//  }
+//  old_input = input; //remember for next time
+//}
+
+////renders a mid-century brutalist interpretation of the classic "WiFi" symbol
+//void drawWiFi(uint8_t x, uint8_t y) {
+//  oled.setFont(u8g2_font_unifont_t_symbols);
+//  oled.drawCircle(x, y, 8, U8G2_DRAW_UPPER_RIGHT);
+//  oled.drawCircle(x, y, 6, U8G2_DRAW_UPPER_RIGHT);
+//  oled.drawCircle(x, y, 4, U8G2_DRAW_UPPER_RIGHT);
+//  oled.drawDisc(x, y, 2, U8G2_DRAW_UPPER_RIGHT);
+//}
+////renders twinkle drawing to indicate LED/GPS are on
+//void drawLED(uint8_t x, uint8_t y) {
+//  oled.setFont(u8g2_font_9x15_m_symbols);
+//  oled.drawGlyph(x, y, 0x2600);
+//  oled.setFont(u8g2_font_5x7_mf); //small, fashion-forward font
+//}
+
+//renders battery symbol including level amount
+void drawBattery(uint8_t x, uint8_t y, float level) {
+  oled.drawBox(x, y, 20, 8);
+  oled.drawBox(x + 20, y + 2, 2, 4);
+  oled.drawBox(x, y, 20 * level, 8);
+  oled.setCursor(0, 50);
+  oled.print(String("Time Remaining: ") + String (time_remaining));
+}
+
+
+//hand in a discharge amount, and generate a voltage
+float voltage_from_discharge(float discharge) {
+  return -5.08321149 * pow(discharge, 4.0) + 8.16962756 * pow(discharge, 3.0) - 3.53049671 * pow(discharge, 2.0) - 0.3295403 * discharge + 4.08151442;
+}
+
+//hand in a voltage, and error (tolerance amount) and return corresponding discharge amount (0.0 fully charged, 1.0 fully discharged)
+float discharge_from_voltage(float voltage, float error){
+  float discharge = 0;
+  for (int i=0; i<1000; i++){
+    discharge += .001;
+    if (abs(voltage_from_discharge(discharge)- voltage)<error){
+      return discharge;
+    }
+  }
+  return 0;
+}
+
+/////////
+
+
+
 
 void setup_imu() {
   if (imu.readByte(MPU9255_ADDRESS, WHO_AM_I_MPU9255) == 0x73) {
