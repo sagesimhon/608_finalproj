@@ -65,11 +65,11 @@ motionValues mv;
 Motion motionScaling(800, 600.0);
 
 //////////////////////// SHAKE TO RESET FXN //////////////////////
-float acc_threshold = 0.4;
-float time_threshold = 400;
-unsigned long shake_checkpoint = millis();
-int shake_count = 0;
-int shake_state = 0;
+//float acc_threshold = 0.4;
+//float time_threshold = 400;
+//unsigned long shake_checkpoint = millis();
+//int shake_count = 0;
+//int shake_state = 0;
 
 unsigned long powerTimer = millis();
 unsigned long powerTimer1 = millis();
@@ -143,37 +143,40 @@ void loop() {
     // CONTINUOUSLY SAMPLE INPUTS FROM SENSOR AND POST TO SERVER
     case DRAW:
       print_instructions("I'm drawing on '" + imageId + "'. press b again to stop");
-      if (millis() - powerTimer1 >= 2000) {
-        oled.setPowerSave(1);
-      }
+//      if (millis() - powerTimer1 >= 2000) {
+//        oled.setPowerSave(1);
+//      }
       if (millis() - lastSampleTime >= sampleFrequency) {
         lastSampleTime = millis();
         numSavedPoints += 1;
 
         // sample from sensor for shake_to_reset
-        imu.readAccelData(imu.accelCount);
-        float u = imu.accelCount[0] * imu.aRes;
-        float v = imu.accelCount[1] * imu.aRes;
-        float avg = (u + v) / 2;
+//        imu.readAccelData(imu.accelCount);
+//        float u = imu.accelCount[0] * imu.aRes;
+//        float v = imu.accelCount[1] * imu.aRes;
+//        float avg = (u + v) / 2;
         //        Serial.println(avg);
-        if (shake_state >= 6) {
-          shake_state = 0;
-          Serial.println("This is when the delete request should happen");
-          DELETE_request(artist.getCurrentImage(), "1000", artist.getCurrentColor());
-          print_instructions("RESET");
-          delay(3000);
-          state = INSTRUCTIONS;
-        } else if ((shake_state % 2 == 1 && avg < -acc_threshold) || (shake_state % 2 == 0 && avg > acc_threshold)) {
-          shake_checkpoint = millis();
-          shake_state ++;
-        } else if (millis() - shake_checkpoint > time_threshold) {
-          shake_state = 0;
-        }
-        //mv.motion_setup();
+//        if (shake_state >= 6) {
+//          shake_state = 0;
+////          Serial.println("This is when the delete request should happen");
+//          DELETE_request(artist.getCurrentImage(), "1000", artist.getCurrentColor());
+//          oled.begin();
+//          print_instructions("RESET");
+//          delay(3000);
+//          state = INSTRUCTIONS;
+//        } else if ((shake_state % 2 == 1 && avg < -acc_threshold) || (shake_state % 2 == 0 && avg > acc_threshold)) {
+//          shake_checkpoint = millis();
+//          shake_state ++;
+//        } else if (millis() - shake_checkpoint > time_threshold) {
+//          shake_state = 0;
+//        }
+//        mv.motion_setup();
         delay(20);
         float x = mv.motionVals_x();
         delay(20);
         float y = mv.motionVals_y();
+        Serial.println(x);
+        Serial.println(y);
         //artist.addToImage(modifyReading(x), modifyReading(y));
         artist.addToImage(motionScaling.disp_to_pos(x, true), (motionScaling.disp_to_pos(y, false)));
         globalCounter++;
@@ -186,6 +189,15 @@ void loop() {
         //        Serial.println(artist.getMostRecentPoints(numSavedPoints, false));
         POST_request(artist.getCurrentImage(), artist.getMostRecentPoints(numSavedPoints, true), artist.getMostRecentPoints(numSavedPoints, false), artist.getCurrentColor());//img.get1DCoords(numSavedPoints, true, false), img.get1DCoords(numSavedPoints, false, false), kerberos);
         numSavedPoints = 0;
+      }
+
+      // Button 2 is pressed; send DELETE_request
+      if (lastB2 != b2.getState()) {
+        DELETE_request(artist.getCurrentImage(), "1000", artist.getCurrentColor());
+        lastB2 = b2.getState();
+        print_instructions("RESET");
+        delay(3000);
+        state = INSTRUCTIONS;
       }
 
       // Button was pressed. Change states
@@ -323,6 +335,7 @@ int modifyReading(float reading) {
 void DELETE_request(String imageId, String num_entries, String color) {
   if (client.connect("iesc-s1.mit.edu", 80)) {
     String data = "cmd=DELETE&image_id=" + imageId + "&num_entries=" + num_entries + "&color=" + color;
+//    String data = "cmd=DELETE&image_id=" + imageId + "&time_frame=" + num_entries + "&color=" + color;
     client.println("POST " + url_base + " HTTP/1.1");
     client.println("Host: iesc-s1.mit.edu");
     client.println("Content-Type: application/x-www-form-urlencoded");
