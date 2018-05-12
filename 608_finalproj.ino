@@ -161,7 +161,7 @@ void loop() {
         delay(20);
         float x = mv.motionVals_x();
         delay(20);
-        float y = mv.motionVals_y();
+        float y = -1*mv.motionVals_y();
         Serial.println(x);
         Serial.println(y);
         artist.addToImage(motionScaling.disp_to_pos(x, true), (motionScaling.disp_to_pos(y, false)));
