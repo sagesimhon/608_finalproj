@@ -3,13 +3,13 @@
 <title>Collaborative Online Drawing</title>
 
 <xmp theme="united" style="display:none;">
-# Overview
+## Overview
 
-The goal of this project is to provide a way for users to collaboratively draw online. Using a device, they can choose a color, "room" to draw in, and move a stylus to draw while the server is updated in real time, displaying their current progress (along with other contributors' work).
+The goal of this project is to provide a way for users to collaboratively draw online. Using a device, they can choose a color, "room" to draw in, and move a stylus to draw while the server is updated in real time, displaying their current progress (along with other contributors' work). We hoped to mimic the themes of Google Docs, where users can not only contribute their own work but also edit/delete other existing work; therefore aside from the ability to draw on top of other drawings as in a real-life canvas, we added a 'reset' feature where one user can erase another user's drawing (or his/her own) of a particular color.
 
-## Overall Design
+## Design
 
-Overal Design:
+Fucntional Block Diagram:
 
 <center>
 	<img src="./media/BLOCKDIAGRAM.jpg" width="1500"/>
@@ -17,7 +17,7 @@ Overal Design:
 
 ###Software
 
-**very rough version more elaboration necessary** On the software side, our main arduino file (see below?) uses a state machine (see below) that, in summary, allows users to select a color and room (for example, choosing "green" and "img0" will correspond to drawing in green on the 0th image/"room"), begin drawing, draw by moving the stylus along a flat surface, and finish. To make such selections (color, image #, start drawing, end drawing), there are two buttons that make use of an incorporated Button class. There is also a RESET function controlled by a button click that erases the last thousand data points of drawing by a delete POST request. In the drawing state, data from the sensor is read by our motionValues class, interpeted by our Motion class, and stored in an array via our ImageCoords class so that a list of renderable position values can be sent to the request handler in our server-side code file, where they are added to a databased and the html is returned*. Drawing data is continuously posted in a loop, with a number of cycles high enough for accurate drawings.
+**very rough version more elaboration necessary** On the software side, our main arduino file (see below?) uses a state machine (see below) that, in summary, allows users to select a color and room (for example, choosing "green" and "img0" will correspond to drawing in green on the 0th image/"room"), begin drawing, draw by moving the stylus along a flat surface, and finish. To make such selections (color, image #, start drawing, end drawing), there are two buttons that make use of an incorporated Button class. There is also a RESET function controlled by a button click that erases the last thousand data points of drawing by a delete POST request. In the drawing state, data from the sensor is read by our motionValues class, interpeted by our Motion class, and stored in an array via our ImageCoords class so that a list of renderable position values can be sent to the request handler in our server-side code file, where they are added to a databased and the html is returned*. Drawing data is continuously posted in a loop, with a number of cycles high enough for accurate drawings. ADD detailed description of your code.
 
 Our Artist class does ***.
 
@@ -30,6 +30,8 @@ State Machine:
 ###Hardware
 
 The main functional component of our system is the ADNS-9800, a laser motion sensor. It is connected to the ESP, along with the two buttons, the ADP5350 battery management board, and the oled for displaying instructions. *to be continued.
+Parts List:
+We used one additional part (in a quantity of 4): the ADNS-9800, connected to the ESP by flexible wire.
 
 Circuitry Schematic:
 
@@ -37,19 +39,59 @@ Circuitry Schematic:
 	<img src="./media/CIRCUITRY.jpg" width="1500"/>
 </center>
 
+###Discussion
+discuss documentation and design challenges here?
+
+###Energy Management
+discuss approach
+
+## Results and Conclusions
 
 Working System:
 
 <center>
 	<video width="500" height="400" controls>
-  <source src="./media/6s08_EX02_final_product.mp4" type="video/mp4" >
+  <source src="./media/working system.mp4" type="video/mp4" >
 Your browser does not support the video tag.
 </video>
 </center>
 
-## System Design
+Different Rooms: Different images (designated by image_id = img*"n"*) on which users can draw.
+<center>
+	<img src="./media/flower.png" width="600"/>
+</center>
+<center>
+	<img src="./media/guitar.png" width="600"/>
+</center>
+<center>
+	<img src="./media/hello.png" width="600"/>
+</center>
+<center>
+	<img src="./media/colorful.png" width="600"/>
+</center>
 
-In building the project, I came to realize that anteaters would be amazing pets.  Data was collected and summarized below (example of externally hosted video embedded):
+In the future, we hope to..TALK ABOUT LATER ADDITIONS.
+
+## Documentation
+
+Hardware
+
+An ADNS 9800 is the working sensor component used to obtain position values to be drawn online. Eight flexible wires are soldered onto the eight pins on the top of this circular sensor. It is connected to the ESP via the following pinout/connection guide:
+PUT diagram here
+The OLED, two buttons, and a power management board (ADP5350) are connected as well. See circuitry diagram above for details on all these connections, including another connection guide for the ADNS.
+
+For testing purposes, battery and management board were excluded until final week of building.
+
+Main .ino file:
+Our main arduino file makes use of several helper classes. See below for detailed documentation of each.
+
+motionValues.ino:
+This class sets up the ADNS 9800 sensor and reads measurements from the sensors. This class class can return the `delta_x` and `delta_y` displacement values from the sensor.
+
+Motion.ino:
+An instance of `Motion` is initialized with a `starting_pos_x` and `starting_pos_y`; the starting x and starting y positions of the cursor on the canvas. When the class is instantiated, these variables are set to the center of the canvas, which is determined based off the width and height parameters in the constructor.
+The main working function is `disp_to_pos`. This function takes in a displacement value (which is provided by `motionValues` in the main file) and a boolean `isX` (true if displacement is an x value, false if y value). It scales the displacement value depending on how sensitive we want motions of the stylus to translate in drawing, and, based on the starting position (local variable `starting_pos`, which is set to `starting_pos_x` or starting_pos_y depending on value of the boolean), converts the displacement value to an integer position value (integer for Javascript purposes). The code accounts for negative y displacements (moving stylus down) corresponding to moving downward on the canvas (increase in position). The code also updates `starting_pos_x` or `starting_pos_y` to the new position value returned by `disp_to_pos` for the next use of the function in the main sketch’s loop.
+
 
 <center>
 <iframe width="560" height="315" src="https://www.youtube.com/embed/UtrimZxRXBM" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
