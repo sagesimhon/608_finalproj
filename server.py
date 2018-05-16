@@ -8,18 +8,16 @@ images_db = '__HOME__/images.db'
 
 
 def request_handler(request):
-    """
-    TODO fix this docstring.
- {'is_json': False, 'values': {'x_coords': '174.00,161.00,147.00,162.00,78.00,101.00,200.00,180.00,122.00,53.00,21.00,0.00,91.00,184.00,200.00,200.00,153.00,130.00,97.00,105.00,106.00,122.00,120.00,94.00,', 'y_coords': '38.00,55.00,48.00,62.00,37.00,0.00,0.00,4.00,137.00,183.00,186.00,5.00,0.00,0.00,0.00,0.00,96.00,117.00,84.00,58.00,48.00,38.00,40.00,65.00,', 'entry_id': 'jfusman'}, 'form': {'score': '22', 'ID': '5'}, 'args': ['x_coords', 'y_coords', 'entry_id'], 'method': 'POST'})
-    
+    """    
     Keys under either request['form'] or request['values']
-
-    'cmd'           : Optional that only occurs when requesting a delete. Value should be `DELETE`
-
-    FOR DELETING, I NEED
-    'entry_id'      :
-    'color'         : OPTIONAL
-    'num_entries'   : integer. will delete all `num_entries` from the db
+    'entry_id'      :   Required for everything - viewing (GET), posting, and deleting. String representating name of the 
+                        image. This image will be the one displayed / drawn on / deleted from
+    'color'         :   OPTIONAL for all requests. Will default to black if not provided.
+    `x_coords`      :   Requred for posting. string of x values separated by commas with a trailing comma. 
+                        Values must be ordered from oldest to newest
+    `y_coords`      :   ""
+    'cmd'           :   Required for deleting. values should be `DELETE`
+    'num_entries'   :   Required for deleting. Value shoudl be integer. will delete all `num_entries` from the db
  
     """
 
@@ -27,20 +25,23 @@ def request_handler(request):
     # post_star()
     # return get_html("star")
 
-
+    # Go in one dimension. Doesn't matter whether `request` uses `form` or `values`
     values = request['form'] if 'form' in request else request['values']
     entry_id = values['image_id']
 
+    # Deleting
     if 'cmd' in values:
         print("removed stuff")
         remove_entries(entry_id, values['num_entries'], values.get('color', None))
 
+    # Posting
     elif request['method'] == 'POST':
-        x_coords, y_coords, color = values['x_coords'], values['y_coords'], values['color']
+        x_coords, y_coords, color = values['x_coords'], values['y_coords'], values.get('color', 'black')
         post(entry_id, x_coords, y_coords, color)
         print("posted stuff")
     
     
+    # Always display the image.
     return get_html(entry_id)
 
 
@@ -58,11 +59,13 @@ def post(entry_id, x_coords, y_coords, color):
     conn = sqlite3.connect(images_db)
     c = conn.cursor()
 
+    # Create the table if it doesn't already exist
     try:
         c.execute('''CREATE TABLE image (id text, t timestamp, x_coords text, y_coords text, color text);''')
     except:
         pass
 
+    # Insert the coords
     c.execute('''INSERT into image VALUES (?, ?, ?, ?, ?);''', (entry_id, datetime.datetime.now(), x_coords, y_coords, color));
 
     conn.commit();
@@ -85,11 +88,14 @@ def remove_entries(entry_id, num_entries, color=None):
 
     c = conn.cursor()
 
+    # Remove entries based on color
     try:
         c.execute('''DELETE FROM image WHERE rowid IN (SELECT rowid from image where id==? AND color==? ORDER BY t DESC LIMIT ?);''', (entry_id, color, num_entries,)) if color else \
         c.execute('''DELETE FROM image WHERE rowid in (SELECT rowid from iamge where id == ? ORDER BY t DESC LIMIT ?);''', (entry_id, num_entries,));
         conn.commit()
         conn.close()
+
+    # There is an issue. This exception shouldn't occur
     except:
         conn.close()
         return "couldn't access image info"
@@ -139,6 +145,8 @@ def get_html(entry_id, width=800, height=600):
     #conn.row_factory = lambda cursor, row: row[0]
     c = conn.cursor()
 
+    # point_and_color will end up being
+    # [ (x, y, color), (x, y, color), ...]
     point_and_color = []
     try:
         rows = c.execute('''SELECT x_coords, y_coords, color from image WHERE id == ? ORDER BY t ASC''', (entry_id,)).fetchall();
@@ -146,24 +154,6 @@ def get_html(entry_id, width=800, height=600):
     except:
         entry_id = '_error'
     conn.close()
-
-
-
-    # [ [x, y, color], [x, y, color], [x, y, color]...]
-
-
-    # # [ 'x1,x2,x3,x4,', 'x5,x6,x7,x8,', ...] where x1 is the OLDEST pixel
-    # all_xs = c.execute('''SELECT x_coords from image WHERE id == ? ORDER BY t ASC''', (entry_id,)).fetchall();
-    # all_ys = c.execute('''SELECT y_coords from image where id == ? ORDER BY t ASC''',(entry_id,)).fetchall();
-    # color = c.execute('''SELECT color from image where id == ? ORDER BY t ASC''',(entry_id,)).fetchone();
-
-    # # [x1,x2,x3,x4...xn] as a string NOTE THAT THERE IS NO TRAILING COMMA a trailing comma will fuck up the javascript
-    # xCoords = "[" + ("".join(all_xs))[:-1] + "]"
-    # yCoords = "[" + ("".join(all_ys))[:-1] + "]"
-    # entry_id = "\'" + entry_id + "\'"
-
-
-    # conn.close()
 
     '''
     HTML stuff:
