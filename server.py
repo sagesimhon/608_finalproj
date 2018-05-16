@@ -1,14 +1,10 @@
 import sqlite3
-import json
 import datetime
-import math
-import sys
-import time
-
+# from localservertests import *        Uncomment to run locally
 
 
 images_db = '__HOME__/images.db'
-# images_db = 'images.db'           # Use this path for local testing
+# images_db = 'images.db'           # Uncomment to run locally. Use this path for local testing
 
 
 def request_handler(request):
@@ -16,14 +12,14 @@ def request_handler(request):
     TODO fix this docstring.
  {'is_json': False, 'values': {'x_coords': '174.00,161.00,147.00,162.00,78.00,101.00,200.00,180.00,122.00,53.00,21.00,0.00,91.00,184.00,200.00,200.00,153.00,130.00,97.00,105.00,106.00,122.00,120.00,94.00,', 'y_coords': '38.00,55.00,48.00,62.00,37.00,0.00,0.00,4.00,137.00,183.00,186.00,5.00,0.00,0.00,0.00,0.00,96.00,117.00,84.00,58.00,48.00,38.00,40.00,65.00,', 'entry_id': 'jfusman'}, 'form': {'score': '22', 'ID': '5'}, 'args': ['x_coords', 'y_coords', 'entry_id'], 'method': 'POST'})
     
-    Params that I need:
+    Keys under either request['form'] or request['values']
 
     'cmd'           : Optional that only occurs when requesting a delete. Value should be `DELETE`
 
     FOR DELETING, I NEED
     'entry_id'      :
     'color'         : OPTIONAL
-    'time_frame'    : time in seconds. will delete all entries newer than now - time_frame seconds ago.
+    'num_entries'   : integer. will delete all `num_entries` from the db
  
     """
 
@@ -47,54 +43,6 @@ def request_handler(request):
     
     return get_html(entry_id)
 
-
-# # Purpose of this function is just for testing
-# def run_insert_and_delete():
-#     entry_id, x_coords, y_coords, color = "runInsertAndDelete1", "10,20,", "10,20," , "black"
-
-
-#     # Post one row
-#     post(entry_id, x_coords, y_coords, color)
-
-#     # post another row
-#     x_coords = '30, 40,'
-#     y_coords = x_coords
-#     post(entry_id, x_coords, y_coords, color)
-
-#     # delete 1 row    
-#     remove_entries(entry_id, 1, color)
-#     return get_html(entry_id)
-
-# def post_star():
-#     """
-#     Adds coordinates for two stars to the db, one black one red. Adds coordinates to image with id "star"
-#     """
-#     x_coords = "60,20,110,10,100,60,"
-#     y_coords = "20,110,50,50,110,20,"
-#     color = "black";
-#     post("star", x_coords, y_coords, color)
-
-#     x_coords = "70,30,120,20,110,70,"
-#     y_coords = "30,120,60,60,120,30,"
-#     color = "red";
-#     post("star", x_coords, y_coords, color)
-
-# def run_insert_delete_time_no_color():
-#     entry_id, x_coords, y_coords, color = "runinsertdeletetime", "should stay", "should stay", "black"
-
-#     # Post one row. this row should stay
-#     post(entry_id, x_coords, y_coords, color)
-
-#     # Sleep for one second
-#     time.sleep(2)
-
-#     # Post another two rows. Both should be deleted
-#     post(entry_id, "should delete", "should delete", color)
-#     post(entry_id, "should delete 2", "should delete 2", color)
-
-#     print(remove_newer_entries(entry_id, 1))
-#     local_test(get_html(entry_id))
-#     return get_html(entry_id)
 
 
 def post(entry_id, x_coords, y_coords, color):
@@ -282,35 +230,16 @@ def get_html(entry_id, width=800, height=600):
                 </html>
             '''
 
-def local_test(htmlstring):
-    file = open("server.html","w")
-    file.write(htmlstring) 
-    file.close() 
 
-# def simulate_request_handler():
-#     # To run from command line, input arguments either as:
-#     # server.py post    imgId   xVal    yVal    color
-#     # server.py get     imgID   xVal    yVal    color
-#     # server.py delete  imgId   numEntries      color
-#     # Then open the `server.html` file that should be in the same directory.
-#     _, cmd, img_id = sys.argv[:3]
-  
-#     request = {'values':{'image_id': img_id}, 'method':'GET'}
-#     r = request['values']
-
-#     if cmd == 'post':
-#         x, y, color = sys.argv[3:]
-#         r['x_coords'], r['y_coords'], r['color'] = sys.argv[3:]
-#         request['method'] = "POST"
-#     elif cmd == 'delete':
-#         r['cmd'] = 'DELETE';
-#         r['time_frame'], r['color'] = sys.argv[3:]
-    
-#     local_test(request_handler(request))
 
 
 # # Uncomment to run locally
 # if __name__ == "__main__":
+#     # to run from command line, input arguments either as:
+#     # server.py post    imgId   xVal    yVal    color
+#     # server.py get     imgID   xVal    yVal    color
+#     # server.py delete  imgId   numEntries      color
+#     # Then open the `server.html` file that should be in the same directory.
 #    simulate_request_handler()
     
 
