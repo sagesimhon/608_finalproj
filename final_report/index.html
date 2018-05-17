@@ -17,7 +17,7 @@ This project provides an environment in which users can collaboratively draw onl
 
 ####Software
 
-Our main arduino file uses a state machine (see below) that, in summary, allows users to select a color and canvas and then draw by moving the stylus along a flat surface. For example, choosing "green" and "img0" will correspond to drawing in green on the 0th image/canvas. To cycle through these different states (CHOOSE_COLOR, CHOOSE_IMG, INSTRUCTIONS, DRAW, POST_DRAW_INSTRUCTIONS), there are two buttons that use an incorporated Button class.In the DRAW state, the data from the sensor is read by the motionValues class (giving displacement values), interpreted by the Motion class (giving scaled position values on canvas), and stored in an array via the ImageCoords class. The Artist class controls drawing aspects by storing the image, and can view and change the color or image (add to or erase). The sampling frequency for the DRAW state is 20 ms, which is high enough for accurate drawings. The post request is sent either when the ImageCoords is full or when the user wishes to finish drawing. A list of renderable position values is received in the request handler in the server-side code, where they are added to a database and the canvas is rendered. The canvas automatically reloads every 5 seconds to achieve the "real-time" effect.  There is also a reset functionality that erases the last thousand data points of drawing of a specified color by posting a delete request to the server. The reset can be implemented during the DRAW state by pressing the second button (pin 2).
+Our main arduino file uses a state machine (see below) that, in summary, allows users to select a color and canvas and then draw by moving the stylus along a flat surface. For example, choosing "green" and "img0" will correspond to drawing in green on the 0th image/canvas. To cycle through these different states (CHOOSE_COLOR, CHOOSE_IMG, INSTRUCTIONS, DRAW, POST_DRAW_INSTRUCTIONS), there are two buttons that use an incorporated Button class. In the DRAW state, the data from the sensor is read by the motionValues class (giving displacement values), interpreted by the Motion class (giving scaled position values on canvas), and stored in an array via the ImageCoords class. The Artist class controls drawing aspects by storing the image, and can view and change the color or image (add to or erase). The sampling frequency for the DRAW state is 20 ms, which is high enough for accurate drawings. The post request is sent either when the ImageCoords is full or when the user wishes to finish drawing. A list of renderable position values is received in the request handler in the server-side code, where they are added to a database and the canvas is rendered. The canvas automatically reloads every 5 seconds to achieve the "real-time" effect.  There is also a RESET functionality that erases the last thousand data points of drawing of a specified color by posting a delete request to the server. The RESET can be implemented during the DRAW state by pressing the second button (pin 2).
 
 ####State Machine
 
@@ -45,8 +45,13 @@ Our system has a POWER_SAVE state. If the current state is not in DRAW and the u
 
 Running the system in POWER_SAVE mode for an hour resulted in a 0.34V decrease in battery voltage (from 3.76V to 3.42V). *** add rest of calculations here
 
-####Challenges
-add stuff
+#### Design Challenges
+We had some challenges with the sensor - mainly, getting it to calculate and report coordinates accurately based on displacement. We wrote a class that does this conversion, which is included in the documentation below.
+
+It was difficult to find an ideal (physical) setup for the ADNS-9800 sensor in our system. The user needs to be able to move around the stylus easily in order to draw, but the sensor had to be tethered to the breadboard and the wires we were provided were too short and stiff. In the end, we decided to use long flexible wires, which gives the user more freedom to move around.
+
+On the software side, there were several options on how to implement the RESET (delete) functionality: either by specifying the number of entries to delete, or the time duration. After some testing, we decided that the RESET would delete the past 1,000 entries of the user's current color (an arbitrarily large number that ensures all/most entries of that color will be removed). The server code includes both functions in case the user wants to change this mechanism to better suit their needs. In addition, the number of entries to be deleted can be adjusted (e.g. 10 instead of 1,000) if the user wishes the RESET function to delete only part of a drawing.
+
 
 ## Results and Conclusions
 
@@ -117,7 +122,7 @@ This class sets up the ADNS-9800 sensor and reads measurements from the sensor. 
 **Motion:**
 `Motion` is initialized with a `starting_pos_x` and `starting_pos_y`: the starting x and starting y positions of the cursor on the canvas. When the class is instantiated, these variables are set to the center of the canvas, which is determined based off the width and height parameters in the constructor.
 
-`disp_to_pos` takes in a displacement value (which is provided by `motionValues` in the main file) and a boolean `isX` (true if displacement is an x value, false if y value). It scales the displacement value depending on how sensitive we want motions of the stylus to translate in drawing, and, based on the starting position (local variable `starting_pos`, which is set to `starting_pos_x` or `starting_pos_y` depending on value of the boolean), converts the displacement value to an integer position value (integer for Javascript purposes). The code accounts for negative y displacements (moving stylus down) corresponding to moving downward on the canvas (increase in position). The code also updates `starting_pos_x` or `starting_pos_y` to the new position value returned by `disp_to_pos` for the next use of the function in the main sketch’s loop.
+`disp_to_pos` takes in a displacement value (which is provided by `motionValues` in the main file) and a boolean `isX` (true if displacement is an x value, false if y value). It scales the displacement value depending on how sensitive we want motions of the stylus to translate in drawing, and, based on the starting position (local variable `starting_pos`, which is set to `starting_pos_x` or `starting_pos_y` depending on value of the boolean), converts the displacement value to an integer position value (integer for Javascript purposes). The code accounts for negative y displacements (moving stylus down) corresponding to moving downward on the canvas (increase in position). The code also updates `starting_pos_x` or `starting_pos_y` to the new position value returned by `disp_to_pos` for the next use of the function in the main sketch's loop.
 
 **ImageCoords:**
 `ImageCoords` is initialized with an integer value `capacity` and stores the `capacity` most recent `x, y` points. Points can be added by calling `addToImage` and providing the desired `xVal` and `yVal` values.
@@ -131,11 +136,11 @@ An `Artist` draws on a canvas named `canvasID` with one color at a time, denoted
 
 The `numPoints` most recent points in one dimension - denoted by `isX` - can be retrieved as a string with points sorted oldest to newest.
 
-`addToImage` will add the provided `x` and `y` values to the `Artist`’s current image.
+`addToImage` will add the provided `x` and `y` values to the `Artist`'s current image.
 `clearPoints` will effectively remove all current saved points.
 
 **Button:**
-The `Button` class will read from user specified `pin` and cycle between `numstates` number of states. `getState` will return the button’s current state as an integer from [0, `numstates`)
+The `Button` class will read from user specified `pin` and cycle between `numstates` number of states. `getState` will return the button's current state as an integer from [0, `numstates`)
 
 
 **server.py** handles the server-side. See below for detailed documentation of its functions.
