@@ -5,11 +5,11 @@
 <xmp theme="united" style="display:none;">
 ## Overview
 
-The goal of this project is to provide a way for users to collaboratively draw online. Using a device, they can choose a color, "room" to draw in, and move a stylus to draw while the server is updated in real time, displaying their current progress (along with other contributors' work). We hoped to mimic the themes of Google Docs, where users can not only contribute their own work but also edit/delete other existing work; therefore aside from the ability to draw on top of other drawings as in a real-life canvas, we added a 'reset' feature where one user can erase another user's drawing (or his/her own) of a particular color.
+This project provides an environment in which users can collaboratively draw online. Each user can choose a color and a "canvas" to draw in, and move a stylus to draw. The server updates in real time, displaying the user's current progress along with other contributors' work. We aimed to mimic the features of Google Docs, where users can not only contribute their own work but also edit/delete other existing work; therefore, in addition to the ability to draw on top of other drawings as in a real-life canvas, there is a RESET feature where one user can erase another user's drawing (or his/her own) of a particular color.
 
 ## Design
 
-Fucntional Block Diagram
+####Functional Block Diagram
 
 <center>
 	<img src="./media/BLOCKDIAGRAM.jpg" width="800"/>
@@ -17,11 +17,9 @@ Fucntional Block Diagram
 
 ####Software
 
-Our main arduino file uses a state machine (see below) that, in summary, allows users to select a color and room (for example, choosing "green" and "img0" will correspond to drawing in green on the 0th image/"room"), begin drawing, draw by moving the stylus along a flat surface, and finish.
-To make such selections (color, image #, start drawing, end drawing), there are two buttons that use an incorporated Button class. There is also a RESET function also controlled by a button click that erases the last thousand data points of drawing by a delete POST request.
-On a high level, in the drawing state, data from the sensor is read by our motionValues class (giving displacement values), interpeted by our Motion class (giving scaled position values on canvas), and stored in an array via our ImageCoords class. The Artist class controls drawing aspects by storing the image and can view and change the image (add to or erase) or color. A list of renderable position values is received in the request handler in our server-side code, where they are added to a databased and the html is returned, updating the canvas every 5 seconds. The posting occurs in the loop. The DRAWING state sampling frequency is high enough for accurate drawings.
+Our main arduino file uses a state machine (see below) that, in summary, allows users to select a color and canvas and then draw by moving the stylus along a flat surface. For example, choosing "green" and "img0" will correspond to drawing in green on the 0th image/canvas. To cycle through these different states (CHOOSE_COLOR, CHOOSE_IMG, INSTRUCTIONS, DRAW, POST_DRAW_INSTRUCTIONS), there are two buttons that use an incorporated Button class.In the DRAW state, the data from the sensor is read by the motionValues class (giving displacement values), interpreted by the Motion class (giving scaled position values on canvas), and stored in an array via the ImageCoords class. The Artist class controls drawing aspects by storing the image, and can view and change the color or image (add to or erase). The sampling frequency for the DRAW state is 20 ms, which is high enough for accurate drawings. The post request is sent either when the ImageCoords is full or when the user wishes to finish drawing. A list of renderable position values is received in the request handler in the server-side code, where they are added to a database and the canvas is rendered. The canvas automatically reloads every 5 seconds to achieve the "real-time" effect.  There is also a reset functionality that erases the last thousand data points of drawing by posting a delete request to the server. The reset can be implemented during the DRAW state by pressing the second button (pin 2).
 
-State Machine
+####State Machine
 
 <center>
 	<img src="./media/STATE MACHINE.jpg" width="1500"/>
@@ -29,11 +27,13 @@ State Machine
 
 ####Hardware
 
-The main functional component of our system is the ADNS-9800, a laser motion sensor. It is connected to the ESP, along with the two buttons, the ADP5350 battery management board, and the oled for displaying instructions. *to be continued.
+The main functional component of our system is the ADNS-9800, a laser motion sensor commonly found in a computer mouse. It is connected to the ESP along with the two buttons, the ADP5350 battery management board, and the oled for displaying instructions. *to be continued.
+
 Parts List:
+
 We used one additional part (in a quantity of 4): the ADNS-9800, connected to the ESP by flexible wire.
 
-Circuitry Schematic
+####Circuitry Schematic
 
 <center>
 	<img src="./media/CIRCUITRY.jpg" width="1500"/>
@@ -41,14 +41,16 @@ Circuitry Schematic
 
 ####Power Management
 
-Our system has a POWER_SAVE mode. If the user does not press any buttons for thirty seconds, the oled will go to sleep. The oled does not display any visuals while it is asleep and saves power. Another button press will make the oled display again. We also took out any components in our system that were not being used, so power would not be wasted going to those components. We also included a battery icon and the amount of time remaining, which is calculated based on the discharge rate. In one hour, the system in POWER_SAVE mode decreased from 3.76 volts to 3.42 volts. The battery voltage decreased by .34 volts. It was too inconvenient to turn off the Wi-fi in sleep states.
+Our system has a POWER_SAVE state. If the current state is not in DRAW and the user does not press any buttons for thirty seconds, the oled will go to sleep. The oled does not display any visuals while it is asleep and saves power. Another button press will make the oled display again, bringing the user back to the last state. We took out all components in our system that were not being used so that power would not be wasted going to those components. We also included a battery icon and the amount of time remaining at the bottom of the oled, which is calculated based on the discharge rate. The WiFi stays connected during POWER_SAVE mode because continuously disconnecting and reconnecting turned out to be time- and power-consuming.
+
+Running the system in POWER_SAVE mode for an hour resulted in a 0.34V decrease in battery voltage (from 3.76V to 3.42V). *** add rest of calculations here
 
 ####Challenges
 add stuff
 
 ## Results and Conclusions
 
-Working System:
+####Working System:
 
 <center>
 	<video width="500" height="400" controls>
@@ -57,7 +59,9 @@ Your browser does not support the video tag.
 </video>
 </center>
 
-Different Rooms: Different images (designated by image_id = img*"n"*) on which users can draw.
+####Canvas:
+
+Different images (designated by image_id = img*"n"*) on which users can draw.
 <center>
 	<img src="./media/flower.png" width="600"/>
 </center>
@@ -74,8 +78,7 @@ Different Rooms: Different images (designated by image_id = img*"n"*) on which u
 
 ####Looking forward
 
-Future improvements include quicker real-time updates to the server and higher sensor accuracy. Having the ability to see the cursor on-screen and lift stylus to move cursor location is another addition.
-It would also be interesting to add a machine learning aspect: teaching to recognize drawings as certain images or words and translating them into text, for example.
+Possible future improvements include quicker real-time updates to the server and higher sensor accuracy. Having the ability to see the cursor on-screen and lift the stylus to move cursor location is another addition. It would also be interesting to add a machine learning aspect: for instance, teaching to recognize drawings as certain images or words and translating them into text.
 
 ##Documentation
 
@@ -105,17 +108,16 @@ For testing purposes, battery and management board were excluded until final wee
 
 ####Software
 
-Main .ino file:
 Our main Arduino file makes use of several helper classes. See below for detailed documentation of each.
 
 
 **motionValues:**
-This class sets up the ADNS 9800 sensor and reads measurements from the sensors. This class can return the `delta_x` and `delta_y` displacement values from the sensor.
+This class sets up the ADNS-9800 sensor and reads measurements from the sensor. This class returns the `delta_x` and `delta_y` displacement values.
 
 **Motion:**
 `Motion` is initialized with a `starting_pos_x` and `starting_pos_y`: the starting x and starting y positions of the cursor on the canvas. When the class is instantiated, these variables are set to the center of the canvas, which is determined based off the width and height parameters in the constructor.
 
-`disp_to_pos` takes in a displacement value (which is provided by `motionValues` in the main file) and a boolean `isX` (true if displacement is an x value, false if y value). It scales the displacement value depending on how sensitive we want motions of the stylus to translate in drawing, and, based on the starting position (local variable `starting_pos`, which is set to `starting_pos_x` or starting_pos_y depending on value of the boolean), converts the displacement value to an integer position value (integer for Javascript purposes). The code accounts for negative y displacements (moving stylus down) corresponding to moving downward on the canvas (increase in position). The code also updates `starting_pos_x` or `starting_pos_y` to the new position value returned by `disp_to_pos` for the next use of the function in the main sketch’s loop.
+`disp_to_pos` takes in a displacement value (which is provided by `motionValues` in the main file) and a boolean `isX` (true if displacement is an x value, false if y value). It scales the displacement value depending on how sensitive we want motions of the stylus to translate in drawing, and, based on the starting position (local variable `starting_pos`, which is set to `starting_pos_x` or `starting_pos_y` depending on value of the boolean), converts the displacement value to an integer position value (integer for Javascript purposes). The code accounts for negative y displacements (moving stylus down) corresponding to moving downward on the canvas (increase in position). The code also updates `starting_pos_x` or `starting_pos_y` to the new position value returned by `disp_to_pos` for the next use of the function in the main sketch’s loop.
 
 **ImageCoords:**
 `ImageCoords` is initialized with an integer value `capacity` and stores the `capacity` most recent `x, y` points. Points can be added by calling `addToImage` and providing the desired `xVal` and `yVal` values.
@@ -129,33 +131,31 @@ An `Artist` draws on a canvas named `canvasID` with one color at a time, denoted
 
 The `numPoints` most recent points in one dimension - denoted by `isX` - can be retrieved as a string with points sorted oldest to newest.
 
-`addToImage` will add provided `x` and `y` values to the `Artist`’s current image.
-`clearPoints` will effectively remove all the current saved points.
-
-**Server:**
-`server.py`:
-`request_handler` : Requires that the a valid image ID is included in all requests. `request_handler` will always display the image associated with the valid image ID regardless of what the request is.
-The format of what `request` must be is specified below:
-
-'entry_id'
-Required for everything - viewing (GET), posting, and deleting. String representing name of the image. This image will be the one displayed / drawn on / deleted from
-
-'color'
-OPTIONAL for all requests. Will default to black if not provided.
-`x_coords`
-Required for posting. string of x values separated by commas with a trailing comma. Values must be ordered from oldest to newest
-
-`y_coords`
-'cmd'
-Required for deleting. values should be `DELETE`
-'num_entries'
-Required for deleting. Value should be integer. will delete all `num_entries` from the db
+`addToImage` will add the provided `x` and `y` values to the `Artist`’s current image.
+`clearPoints` will effectively remove all current saved points.
 
 **Button:**
-The `Button` class will read from user specified `pin` and cycle between `numstates` number of states.
-`getState` will return the button’s current state as an integer from [0, `numstates`)
+The `Button` class will read from user specified `pin` and cycle between `numstates` number of states. `getState` will return the button’s current state as an integer from [0, `numstates`)
 
-State machine loop in main code, using helper classes and managing power consumption:
+
+`server.py` handles the server-side. See below for detailed documentation of its functions.
+
+**request_handler:**
+`request_handler` takes in one input, `request`, and requires that the a valid image ID is included in all requests. This function will always display the image associated with the valid image ID regardless of what the request is. The format of `request` is specified below:
+
+`entry_id`: String representing name of the image. Required for everything - viewing (GET), posting, and deleting. This image will be the one displayed / drawn on / deleted from.
+
+`color`: OPTIONAL for all requests. Will default to black if not provided.
+
+`x_coords`: String of x values separated by commas with a trailing comma. Required for posting. Values must be ordered from oldest to newest.
+
+`y_coords`: String of y values separated by commas with a trailing comma. Same as `x_coords`.
+
+`cmd`: Required for deleting. value should be "DELETE".
+
+`num_entries`: Integer value specifying number of entries to be removed from the database. Required for deleting.
+
+Below is the state machine loop found in main code, using helper classes and managing power consumption:
 
 ```
 switch (state) {
