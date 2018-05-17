@@ -3,7 +3,6 @@
 #include "Artist.h"
 
 Artist::Artist(int imageSize, String canvasID, String color){
-    delete _imgCoords;
     _imgCoords = new ImageCoords(imageSize);
     _canvasID = canvasID;
     _color = color;
