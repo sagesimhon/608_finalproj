@@ -76,7 +76,7 @@ def remove_entries(entry_id, num_entries, color=None):
     REMOVES ENTIRE ENTRIES BASED ON NUM_ENTRIES
 
     entry_id    :   String with the value equal to the ID of the image to remove coordinates for
-    num_entries :   Integer denoting the number of full-entries to remove. The total number of coordinate removed depends on 
+    num_entries :   Integer denoting the number of full-entries to remove. The total number of coordinates removed depends on 
                     how many were stored at every PUSH request
     color       :   String as a valid javascript color. `remove_coordinates` will only remove the most recent `num_entries`
                     for this color. If no color specified, remove_coordinates will remove all the `num_entries` most 
@@ -106,7 +106,7 @@ def remove_newer_entries(entry_id, erase_time, color=None):
     """
     REMOVES ENTRIES BASED ON TIME
 
-    entry_id    :      id of the image to erase some
+    entry_id    :      a string that is the id of the image to erase some entries for
     erase_time  :      integer time in seconds. Will erase entries from 
                        [now - erase_time, now]
     color       :      If provided, will erase only recent values of points with this color.
