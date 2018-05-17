@@ -20,7 +20,7 @@ class Artist{
         * imageSize     :       the number of most recent points this Artist can save
         * canvasID      :       The String ID of the image the Artist will draw on
         * color         :       Artist's current color as a string.
-        *                           (black, red, blue, green, yellow) TODO test these colors
+        *                           (black, red, blue, green, yellow) 
         */
         Artist(int imageSize, String canvasID, String color);
 
@@ -55,7 +55,7 @@ class Artist{
             As a comma separated string, WITH a trailing comma. 
 
             numPoints   :       number of most recent points to return.
-                                0 <= numPoints < imageSize
+                                0 <= numPoints <= imageSize
             isX         :       True to get a string with x coordinates, false for y coordinates
             Returns     :       'p0, p1, p2,... p(numPoints-1),'
         */
