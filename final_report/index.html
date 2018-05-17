@@ -138,9 +138,9 @@ The `numPoints` most recent points in one dimension - denoted by `isX` - can be 
 The `Button` class will read from user specified `pin` and cycle between `numstates` number of states. `getState` will return the button’s current state as an integer from [0, `numstates`)
 
 
-`server.py` handles the server-side. See below for detailed documentation of its functions.
+**server.py** handles the server-side. See below for detailed documentation of its functions.
 
-**request_handler:**
+`request_handler`:
 `request_handler` takes in one input, `request`, and requires that the a valid image ID is included in all requests. This function will always display the image associated with the valid image ID regardless of what the request is. The format of `request` is specified below:
 
 `entry_id`: String representing name of the image. Required for everything - viewing (GET), posting, and deleting. This image will be the one displayed / drawn on / deleted from.
