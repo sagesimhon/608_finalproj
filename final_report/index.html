@@ -43,7 +43,7 @@ We used one additional part (in a quantity of 4): ADNS-9800 Laser Motion Sensor,
 
 Our system has a POWER_SAVE state. If the current state is not in DRAW and the user does not press any buttons for thirty seconds, the oled will go to sleep. The oled does not display any visuals while it is asleep and saves power. Another button press will make the oled display again, bringing the user back to the last state. We took out all components in our system that were not being used so that power would not be wasted going to those components. We also included a battery icon and the amount of time remaining at the bottom of the oled, which is calculated based on the discharge rate. The WiFi stays connected during POWER_SAVE mode because continuously disconnecting and reconnecting turned out to be time- and power-consuming.
 
-Running the system in POWER_SAVE mode for an hour resulted in a 0.34V decrease in battery voltage (from 3.76V to 3.42V). *** add rest of calculations here
+Running the system in POWER_SAVE mode for an hour resulted in a 0.34V decrease in battery voltage (from 3.76V to 3.42V).
 
 #### Design Challenges
 We had some challenges with the sensor - mainly, getting it to calculate and report coordinates accurately based on displacement. We wrote a class that does this conversion, which is included in the documentation below.
